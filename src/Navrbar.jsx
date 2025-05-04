@@ -1,143 +1,102 @@
 import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSearch, faGlobe, faAngleDown } from "@fortawesome/free-solid-svg-icons";
-import { faFacebook, faTwitter, faInstagram, faWhatsapp, faYoutube, faTelegram } from "@fortawesome/free-brands-svg-icons";
+import { faSearch, faMicrophone, faCamera, faPhone } from "@fortawesome/free-solid-svg-icons";
+import { faFacebook, faTwitter, faInstagram, faWhatsapp } from "@fortawesome/free-brands-svg-icons";
+import { Link } from 'react-router-dom';
+
 
 const Navbar = () => {
   const [location, setLocation] = useState("Detecting...");
   const [language, setLanguage] = useState("Detecting...");
   const [hoveredMenu, setHoveredMenu] = useState(null);
+  const [textIndex, setTextIndex] = useState(0);
+  const messages = ["WELL COME TO B2A2 CARS CLUB", "DREAM YOUR CARS WITH US"];
 
   useEffect(() => {
     fetch("https://ipapi.co/json/")
-      .then((response) => response.json())
+      .then((res) => res.json())
       .then((data) => {
         setLocation(data.country_name);
         setLanguage(getLanguageByCountry(data.country_code));
       })
-      .catch((error) => {
-        console.error("Error fetching location:", error);
+      .catch(() => {
         setLocation("Unknown");
         setLanguage("English");
       });
+
+    const timer1 = setTimeout(() => setTextIndex(1), 3000);
+    return () => clearTimeout(timer1);
   }, []);
 
-  const getLanguageByCountry = (countryCode) => {
+  const getLanguageByCountry = (code) => {
     const languageMap = {
-      US: "English",
-      IN: "English",
-      FR: "French",
-      DE: "German",
-      CN: "Chinese",
-      JP: "Japanese",
-      RU: "Russian",
-      ES: "Spanish",
-      BR: "Portuguese",
-      IT: "Italian",
+      US: "English", IN: "English", FR: "French", DE: "German", CN: "Chinese", JP: "Japanese",
+      RU: "Russian", ES: "Spanish", BR: "Portuguese", IT: "Italian",
     };
-    return languageMap[countryCode] || "English";
+    return languageMap[code] || "English";
   };
 
-  const menuItems = [
-    { name: "Home", subItems: ["Overview", "News", "Updates"] },
-    { name: "Vehicles", subItems: ["New Cars", "Used Cars", "Electric"] },
-    { name: "Auctions", subItems: ["Upcoming Auctions", "Past Auctions"] },
-    { name: "Shipping", subItems: ["Rates", "Tracking", "Logistics"] },
-    { name: "Contact", subItems: ["Support", "Email", "Location"] },
-    { name: "About", subItems: ["Our Story", "Careers", "Team"] },
-  ];
 
   return (
-    <div style={{ width: "100%", backgroundColor: "#333", color: "#fff", paddingBottom: "10px" }}>
-      {/* Top Row */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 2%" }}>
+    <div style={{ width: "100%", fontFamily: "sans-serif" }}>
+      {/* Top Header */}
+      <div style={{ backgroundColor: "#2e5771", color: "#fff", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 3%", flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "center" }}>
-          <img src="/images/image.png" alt="Logo" style={{ width: "50px", marginRight: "10px" }} />
-          <h2>B2A2</h2>
+          <img src="/images/logo.png" alt="Logo" style={{ width: "60px" }} />
+          <div style={{ marginLeft: "15px" }}>
+            <h2 style={{ margin: 0, fontWeight: "bold" }}>B<sub>2</sub>A<sub>2</sub> CARS CLUB</h2>
+          </div>
         </div>
-
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <input type="text" placeholder="Search car model..." 
-            style={{ padding: "8px", borderRadius: "5px", marginRight: "5px", border: "none", outline: "none" }} />
-          <FontAwesomeIcon icon={faSearch} style={{ cursor: "pointer", fontSize: "18px" }} />
+        <div style={{ textAlign: "center", flexGrow: 1 }}>
+          <h2 style={{ margin: 0, fontWeight: "bold" }}>{messages[textIndex]}</h2>
         </div>
-
-        <div>
-          <FontAwesomeIcon icon={faFacebook} style={{ margin: "0 10px", cursor: "pointer", fontSize: "25px" }} />
-          <FontAwesomeIcon icon={faTwitter} style={{ margin: "0 10px", cursor: "pointer", fontSize: "25px" }} />
-          <FontAwesomeIcon icon={faInstagram} style={{ margin: "0 10px", cursor: "pointer", fontSize: "25px" }} />
-          <FontAwesomeIcon icon={faWhatsapp} style={{ margin: "0 10px", cursor: "pointer", fontSize: "25px" }} />
-          <FontAwesomeIcon icon={faYoutube} style={{ margin: "0 10px", cursor: "pointer", fontSize: "25px" }} />
-          <FontAwesomeIcon icon={faTelegram} style={{ margin: "0 10px", cursor: "pointer", fontSize: "25px" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+          <FontAwesomeIcon icon={faPhone} style={{ fontSize: "22px", cursor: "pointer" }} />
+          <FontAwesomeIcon icon={faWhatsapp} style={{ fontSize: "25px", cursor: "pointer" }} />
+          <FontAwesomeIcon icon={faTwitter} style={{ fontSize: "25px", cursor: "pointer" }} />
+          <FontAwesomeIcon icon={faInstagram} style={{ fontSize: "25px", cursor: "pointer" }} />
         </div>
       </div>
 
-      {/* Bottom Row (Navigation & Location) */}
-      <nav style={{ backgroundColor: "#222", padding: "10px 2%", textAlign: "center" }}>
-        <div style={{ display: "flex", justifyContent: "center", gap: "50px" }}>
-          {menuItems.map((item, index) => (
-            <div
-              key={index}
-              style={{ position: "relative" }}
-              onMouseEnter={() => setHoveredMenu(index)}
-              onMouseLeave={() => setHoveredMenu(null)}
-            >
-              <a
-                href="#"
-                style={{
-                  color: "#fff",
-                  textDecoration: "none",
-                  fontSize: "18px",
-                  fontWeight: "bold",
-                  padding: "10px 15px",
-                  display: "block",
-                  transition: "0.3s",
-                }}
-                onMouseEnter={(e) => e.target.style.color = "#ffcc00"}
-                onMouseLeave={(e) => e.target.style.color = "#fff"}
-              >
-                {item.name} <FontAwesomeIcon icon={faAngleDown} style={{ marginLeft: "5px" }} />
-              </a>
+      {/* Search + Nav + Location Row */}
+      <div style={{ backgroundColor: "#32556d", padding: "10px 3%" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "20px" }}>
+          {/* Search Bar */}
+          <div style={{ display: "flex", alignItems: "center", backgroundColor: "#1d3a4d", borderRadius: "30px", padding: "10px 20px", flex: 1, maxWidth: "200px" }}>
+            <FontAwesomeIcon icon={faSearch} style={{ color: "#fff", fontSize: "18px" }} />
+            <input type="text" placeholder="Search here" style={{ flex: 1, marginLeft: "10px", background: "transparent", border: "none", outline: "none", color: "#fff", fontSize: "16px" }} />
+            <FontAwesomeIcon icon={faMicrophone} style={{ color: "#fff", margin: "0 10px", fontSize: "18px" }} />
+            <FontAwesomeIcon icon={faCamera} style={{ color: "#fff", fontSize: "18px" }} />
+          </div>
 
-              {hoveredMenu === index && (
-                <div style={{
-                  position: "absolute",
-                  top: "40px",
-                  left: "0",
-                  backgroundColor: "#444",
-                  boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
-                  borderRadius: "5px",
-                  width: "160px",
-                  zIndex: 1000
-                }}>
-                  {item.subItems.map((subItem, subIndex) => (
-                    <a
-                      key={subIndex}
-                      href="#"
-                      style={{
-                        display: "block",
-                        padding: "10px",
-                        color: "#fff",
-                        textDecoration: "none",
-                        transition: "0.3s",
-                      }}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = "#555"}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = "transparent"}
-                    >
-                      {subItem}
-                    </a>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+          {/* Navigation Links */}
+          <ul
+          style={{
+            listStyle: "none",
+            display: "flex",
+            gap: "20px",
+            fontSize: "16px",
+            fontWeight: "bold",
+            marginLeft: "30px", // Adjusted margin to align properly
+          }}
+        >
+          <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/">HOME </Link></li>
+          <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/vehicles">VEHICLES </Link></li>
+          <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Auctions"> AUCTION </Link> </li>
+          <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/About">ABOUT US </Link></li>
+          <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Contact"> CONTACT </Link></li>
+          <li>SERVICES</li>
+          <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Login">LOGIN</Link></li>
+          <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Admin">Admin</Link></li>
+
+        </ul>
+
+          {/* Location */}
+          <div style={{ color: "#fff", fontSize: "16px", whiteSpace: "nowrap" }}>
+            <span>{location} - {language}</span>
+          </div>
         </div>
-        
-        <div style={{ marginTop: "10px", color: "#fff", fontSize: "16px" }}>
-          <FontAwesomeIcon icon={faGlobe} style={{ marginRight: "5px" }} />
-          <span>{location} - {language}</span>
-        </div>
-      </nav>
+      </div>
     </div>
   );
 };

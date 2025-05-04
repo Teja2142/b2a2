@@ -1,0 +1,361 @@
+{
+	"info": {
+		"_postman_id": "3889e99f-ad7e-4934-9adc-2810d6335a1a",
+		"name": "car_auction",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "37150329",
+		"_collection_link": "https://my-team-6628.postman.co/workspace/cd795e99-b10f-4e5c-8820-e7895d5e0a9c/collection/37150329-3889e99f-ad7e-4934-9adc-2810d6335a1a?action=share&source=collection_link&creator=37150329"
+	},
+	"item": [
+		{
+			"name": "users/register",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"chaitanya\",\r\n    \"mobile\": \"123456789\",\r\n    \"email\": \"chaitusrvy@gmail.com\",\r\n    \"password\": \"mypassword\",\r\n    \"confirmPassword\": \"mypassword\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseurl}}/api/users/register",
+					"host": [
+						"{{baseurl}}"
+					],
+					"path": [
+						"api",
+						"users",
+						"register"
+					]
+				},
+				"description": "Generated from cURL: curl -X 'POST' \\\r\n  'http://localhost:5000/register' \\\r\n  -H 'Content-Type: application/json' \\\r\n  -d '{\r\n    \"email\": \"user@example.com\",\r\n    \"password\": \"securepassword\",\r\n    \"full_name\": \"John Doe\",\r\n    \"phone\": \"1234567890\"\r\n  }'\r\n"
+			},
+			"response": []
+		},
+		{
+			"name": "users/login/",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyQGV4YW1wbGUuY29tIiwiZXhwIjoxNzQxNjM0MDA5fQ.UqeFhb9aHBMfyTU9cMyXHDfBX8k8iM_rVVes9Ow8HS4",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "username",
+							"value": "user@example.com",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "securepassword",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:5000/token",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"token"
+					]
+				},
+				"description": "Generated from cURL: curl -X 'POST' \\\r\n  'http://localhost:5000/token' \\\r\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\r\n  -d 'username=user@example.com&password=securepassword'\r\n"
+			},
+			"response": []
+		},
+		{
+			"name": "users/login-token/",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyQGV4YW1wbGUuY29tIiwiZXhwIjoxNzQxNjM0MDA5fQ.UqeFhb9aHBMfyTU9cMyXHDfBX8k8iM_rVVes9Ow8HS4",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "username",
+							"value": "user@example.com",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "securepassword",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8000/api/users/login-token/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"users",
+						"login-token",
+						""
+					]
+				},
+				"description": "Generated from cURL: curl -X 'POST' \\\r\n  'http://localhost:5000/token' \\\r\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\r\n  -d 'username=user@example.com&password=securepassword'\r\n"
+			},
+			"response": []
+		},
+		{
+			"name": "password-reset/",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\": \"chaitusrvy1@gmail.com\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseurl}}/api/users/password-reset",
+					"host": [
+						"{{baseurl}}"
+					],
+					"path": [
+						"api",
+						"users",
+						"password-reset"
+					]
+				},
+				"description": "Generated from cURL: curl -X POST http://127.0.0.1:8000/api/password-reset/ \\\r\n     -H \"Content-Type: application/json\" \\\r\n     -d '{\r\n           \"email\": \"user@example.com\"\r\n         }'\r\n"
+			},
+			"response": []
+		},
+		{
+			"name": "password-reset/<token>",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"password\": \"chaitu123@\",\r\n    \"confirmPassword\": \"chaitu123@\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseurl}}/api/users/password-reset/35e174e1-5ffa-4183-bb30-d207c15936d5",
+					"host": [
+						"{{baseurl}}"
+					],
+					"path": [
+						"api",
+						"users",
+						"password-reset",
+						"35e174e1-5ffa-4183-bb30-d207c15936d5"
+					]
+				},
+				"description": "Generated from cURL: curl -X POST http://127.0.0.1:8000/api/password-reset/550e8400-e29b-41d4-a716-446655440000/ \\\r\n     -H \"Content-Type: application/json\" \\\r\n     -d '{\r\n           \"password\": \"newpassword\",\r\n           \"confirmPassword\": \"newpassword\"\r\n         }'\r\n"
+			},
+			"response": []
+		},
+		{
+			"name": "vehicles/create/",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "make",
+							"value": "Toyota",
+							"type": "text"
+						},
+						{
+							"key": "model",
+							"value": "Camry",
+							"type": "text"
+						},
+						{
+							"key": "year",
+							"value": "2022",
+							"type": "text"
+						},
+						{
+							"key": "condition",
+							"value": "Used",
+							"type": "text"
+						},
+						{
+							"key": "max_price",
+							"value": "18000.00",
+							"type": "text"
+						},
+						{
+							"key": "images",
+							"type": "file",
+							"src": "/C:/Users/chait/Downloads/toyota_camry_image1.jpg"
+						},
+						{
+							"key": "images",
+							"type": "file",
+							"src": "/C:/Users/chait/Downloads/toyota_camry_image2.jpg"
+						},
+						{
+							"key": "images",
+							"type": "file",
+							"src": "/C:/Users/chait/Downloads/toyota_camry_image3.jpg"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/auction/vehicles/create/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"auction",
+						"vehicles",
+						"create",
+						""
+					]
+				},
+				"description": "Generated from cURL: curl -X POST http://127.0.0.1:8000/vehicles/create/ \\\r\n  -F \"make=Toyota\" \\\r\n  -F \"model=Camry\" \\\r\n  -F \"year=2022\" \\\r\n  -F \"condition=Used\" \\\r\n  -F \"max_price=18000.00\" \\\r\n  -F \"images=@/path/to/image1.jpg\" \\\r\n  -F \"images=@/path/to/image2.jpg\" \\\r\n  -F \"images=@/path/to/image3.jpg\"\r\n"
+			},
+			"response": []
+		},
+		{
+			"name": "vehicles/",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "make",
+							"value": "Toyota",
+							"type": "text"
+						},
+						{
+							"key": "model",
+							"value": "Camry",
+							"type": "text"
+						},
+						{
+							"key": "year",
+							"value": "2022",
+							"type": "text"
+						},
+						{
+							"key": "condition",
+							"value": "Used",
+							"type": "text"
+						},
+						{
+							"key": "max_price",
+							"value": "18000.00",
+							"type": "text"
+						},
+						{
+							"key": "images",
+							"type": "file",
+							"src": "/C:/Users/chait/Downloads/toyota_camry_image1.jpg"
+						},
+						{
+							"key": "images",
+							"type": "file",
+							"src": "/C:/Users/chait/Downloads/toyota_camry_image2.jpg"
+						},
+						{
+							"key": "images",
+							"type": "file",
+							"src": "/C:/Users/chait/Downloads/toyota_camry_image3.jpg"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/auction/vehicles/create/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"auction",
+						"vehicles",
+						"create",
+						""
+					]
+				},
+				"description": "Generated from cURL: curl -X POST http://127.0.0.1:8000/vehicles/create/ \\\r\n  -F \"make=Toyota\" \\\r\n  -F \"model=Camry\" \\\r\n  -F \"year=2022\" \\\r\n  -F \"condition=Used\" \\\r\n  -F \"max_price=18000.00\" \\\r\n  -F \"images=@/path/to/image1.jpg\" \\\r\n  -F \"images=@/path/to/image2.jpg\" \\\r\n  -F \"images=@/path/to/image3.jpg\"\r\n"
+			},
+			"response": []
+		}
+	]
+}

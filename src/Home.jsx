@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useCallback } from 'react';
+import { useInView } from 'react-intersection-observer';
+import CountUp from 'react-countup';
+
+
+  
 
 
 const carImages = [
@@ -9,6 +14,16 @@ const carImages = [
 ];
 
 const Home = () => {
+
+  const { ref, inView } = useInView({ triggerOnce: true });
+
+  const stats = [
+    { end: 28593, suffix: '+', label: 'Vehicles Sold' },
+    { end: 96, suffix: '%', label: 'Customer Satisfaction' },
+    { end: 69, suffix: '+', label: 'Global Partners' }
+  ];
+
+
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -20,7 +35,7 @@ const Home = () => {
   }, []);
 
   const vehicles = [
-    { year: 2017, make: "SUBARU", model: "FORESTER 2.0XT TOURING", price: "$20,000", miles: "120,000 MILES",image: "https://upload.wikimedia.org/wikipedia/commons/1/1e/Subaru_Impreza_WRX_STI_%28blue%29_%28cropped%29.jpg" },
+    { year: 2017, make: "SUBARU", model: "FORESTER 2.0XT TOURING", price: "$20,000", miles: "120,000 MILES",image: "https://pictures.dealer.com/v/victorysubarusoa/1661/b57077dd76f32d1e2749304370cffcfbx.jpg"  },
     { year: 2012, make: "HYUNDAI", model: "AZERA", price: "$12,500",miles: "98,000 MILES", image: "https://i0.wp.com/drivenautos.com/images/hyundai-azera-second-generation.jpg?w=750&ssl=1" },
     { year: 2013, make: "FORD", model: "ESCAPE SEL", price: "$6,900", miles: "155,554 MILES", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQwsq7D5HjrkN5h75uSMhPRv9UC7tPMJ_iUaQ&s" },
     { year: 2011, make: "JEEP", model: "PATRIOT LATITUDEX", price: "$8,000", image: "https://live.staticflickr.com/8167/6958723466_c0c9b8d9c7_b.jpg" },
@@ -45,57 +60,21 @@ const Home = () => {
 
       {/* Image Container */}
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-        <img
-          src={carImages[currentIndex]}
-          alt="Car"
-          style={{
-            width: "100%",
-            height: "auto",
-            maxHeight: "600px",
-            objectFit: "cover",
-            transition: "opacity 1s ease-in-out",
-          }}
-        />
+        <img src={carImages[currentIndex]} alt="Car" style={{ width: "100%", height: "auto", maxHeight: "600px", objectFit: "cover", transition: "opacity 1s ease-in-out", }}/>
       </div>
 
       <div style={{ textAlign: 'center', padding: '20px', fontFamily: 'Arial, sans-serif' }}>
         <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '30px' }}>
-          <button style={{
-            backgroundColor: '#1F4C6B',
-            color: 'white',
-            padding: '15px 40px',
-            fontSize: '16px',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.3)'
-          }}>VIEW INVENTORY</button>
+          <button style={{ backgroundColor: '#1F4C6B', color: 'white', padding: '15px 40px', fontSize: '16px', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.3)'}}>
+            VIEW INVENTORY</button>
 
-          <button style={{
-            backgroundColor: '#1F4C6B',
-            color: 'white',
-            padding: '15px 40px',
-            fontSize: '16px',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.3)'
-          }}>SCHEDULE SERVICE</button>
+          <button style={{ backgroundColor: '#1F4C6B', color: 'white', padding: '15px 40px', fontSize: '16px', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.3)' }}>
+              SCHEDULE SERVICE</button>
         </div>
 
         <h3 style={{ fontWeight: 'bold', marginBottom: '20px' }}>SHOP BY MODEL</h3>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(6, 1fr)',
-          gap: '10px',
-          justifyContent: 'center',
-          alignItems: 'center',
-          maxWidth: '90%',
-          margin: '0 auto'
-        }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '10px', justifyContent: 'center', alignItems: 'center', maxWidth: '90%', margin: '0 auto'}}>
           {[
             { name: 'COUPE', imageUrl: 'https://cdn07.carsforsale.com/CustomTemplatePhotos/1035164/photos/icon1.png', url: '/coupe' },
             { name: 'SEDAN', imageUrl: 'https://cdn07.carsforsale.com/CustomTemplatePhotos/1035164/photos/icon2.png', url: '/sedan' },
@@ -104,18 +83,7 @@ const Home = () => {
             { name: 'SUV', imageUrl: 'https://cdn07.carsforsale.com/CustomTemplatePhotos/1035164/photos/icon5.png', url: '/suv' },
             { name: 'TRUCK', imageUrl: 'https://cdn07.carsforsale.com/CustomTemplatePhotos/1035164/photos/icon6.png', url: '/truck' }
           ].map((car, index) => (
-            <a key={index} href={car.url} style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              padding: '15px',
-              border: '1px solid #ddd',
-              borderRadius: '5px',
-              minWidth: '100px',
-              fontSize: '14px',
-              textDecoration: 'none',
-              color: '#000'
-            }}>
+            <a key={index} href={car.url} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '15px', border: '1px solid #ddd', borderRadius: '5px', minWidth: '100px', fontSize: '14px', textDecoration: 'none', color: '#000' }}>
               <img src={car.imageUrl} alt={car.name} style={{ width: '90px', height: '60px', objectFit: 'contain' }} />
               <span style={{ marginTop: '10px', color: '#666', textDecoration: 'underline' }}>{car.name}</span>
             </a>
@@ -125,175 +93,158 @@ const Home = () => {
 
       {/* how it works */}
       <div
-      style={{
-        width: "100%",
-        textAlign: "center",
-        padding: "40px",
-        backgroundColor: "#ffffff",
-      }}
-    >
-      {/* Heading Section */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "16px",
-          marginBottom: "24px",
-        }}
-      >
-        <h2
-          style={{
-            fontSize: "28px",
-            fontWeight: "700",
-            color: "#374151",
-            margin: "0",
-          }}
-        >
-          HOW IT WORKS
-        </h2>
-        <span
-          style={{
-            border: "2px solid #ea580c",
-            color: "#ea580c",
-            padding: "6px 16px",
-            borderRadius: "16px",
-            fontWeight: "700",
-            fontSize: "16px",
-            whiteSpace: "nowrap",
-          }}
-        >
-          EASY AS 1-2-3
-        </span>
+            style={{ width: "100%", textAlign: "center", padding: "40px", backgroundColor: "#ffffff",}}>
+            {/* Heading Section */}
+            <div
+              style={{ display: "flex", justifyContent: "center", alignItems: "center", flexWrap: "wrap", gap: "16px", marginBottom: "24px", }}>
+              <h2
+                style={{ fontSize: "28px", fontWeight: "700", color: "#374151", margin: "0", }} >
+                HOW IT WORKS
+              </h2>
+              <span
+                style={{ border: "2px solid #ea580c", color: "#ea580c", padding: "6px 16px", borderRadius: "16px", fontWeight: "700", fontSize: "16px", whiteSpace: "nowrap", }} >
+                EASY AS 1-2-3
+              </span>
+            </div>
+
+            {/* Steps Section */}
+            <div
+              style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "48px", marginTop: "32px", position: "relative", flexWrap: "wrap", }} >
+              {[
+                { icon: "🔍", title: "Find Your Car", button: "ALL INVENTORY" },
+                { icon: "🗺", title: "Stop By Our Lot", button: "GET DIRECTIONS" },
+                { icon: "🚗", title: "Drive Home Today", button: "LEAVE A TESTIMONIAL" },
+              ].map((item, index, arr) => (
+                <div
+                  key={index}
+                  style={{ textAlign: "center", padding: "20px", width: "280px", position: "relative", display: "flex", flexDirection: "column", alignItems: "center", }} >
+                  <div
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", fontSize: "20px", fontWeight: "700", color: "#374151", textAlign: "center", flexWrap: "wrap", }} >
+                    <span style={{ color: "#ea580c", fontSize: "28px" }}>{item.icon}</span>
+                    {item.title}
+                  </div>
+                  <button
+                    style={{ backgroundColor: "#1e3a8a", color: "white", padding: "14px 32px", borderRadius: "6px", marginTop: "16px", fontSize: "16px", fontWeight: "700", border: "none", cursor: "pointer", whiteSpace: "nowrap", }} >
+                    {item.button}
+                  </button>
+                  {/* Vertical Line for larger screens */}
+                  {index < arr.length - 1 && (
+                    <div
+                      style={{ position: "absolute", top: "50%", right: "-24px", height: "80%", width: "2px", backgroundColor: "#d1d5db", display: "none", }} className="vertical-line">
+
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
       </div>
 
-      {/* Steps Section */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: "48px",
-          marginTop: "32px",
-          position: "relative",
-          flexWrap: "wrap",
-        }}
-      >
-        {[
-          { icon: "🔍", title: "Find Your Car", button: "ALL INVENTORY" },
-          { icon: "🗺", title: "Stop By Our Lot", button: "GET DIRECTIONS" },
-          { icon: "🚗", title: "Drive Home Today", button: "LEAVE A TESTIMONIAL" },
-        ].map((item, index, arr) => (
-          <div
+      {/* cars by make */}
+      <div style={{
+    textAlign: "center",
+    padding: "20px",
+    border: "1px solid #ccc",
+    borderRadius: "5px",
+    maxWidth: "80%",
+    margin: "auto"
+    }}>
+    <h2 style={{ fontWeight: "bold", color: "#222" }}>Bid on Cars by Make</h2>
+
+    <div style={{
+        display: "flex",
+        justifyContent: "center",
+        gap: "40px",
+        marginTop: "20px"
+    }}>
+        {["bmw.png", "vw.png", "honda.png", "jeep.png"].map((brand, index) => (
+        <img 
             key={index}
+            src={`/images/${brand}`}
+            alt={brand.split(".")[0]}
             style={{
-              textAlign: "center",
-              padding: "20px",
-              width: "280px",
-              position: "relative",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
+            width: "120px",
+            height: "120px",
+            borderRadius: "10px",
+            transition: "transform 0.3s ease-in-out",
+            cursor: "pointer"
             }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "12px",
-                fontSize: "20px",
-                fontWeight: "700",
-                color: "#374151",
-                textAlign: "center",
-                flexWrap: "wrap",
-              }}
-            >
-              <span style={{ color: "#ea580c", fontSize: "28px" }}>{item.icon}</span>
-              {item.title}
-            </div>
-            <button
-              style={{
-                backgroundColor: "#1e3a8a",
-                color: "white",
-                padding: "14px 32px",
-                borderRadius: "6px",
-                marginTop: "16px",
-                fontSize: "16px",
-                fontWeight: "700",
-                border: "none",
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {item.button}
-            </button>
-            {/* Vertical Line for larger screens */}
-            {index < arr.length - 1 && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: "50%",
-                  right: "-24px",
-                  height: "80%",
-                  width: "2px",
-                  backgroundColor: "#d1d5db",
-                  display: "none",
-                }}
-                className="vertical-line"
-              ></div>
-            )}
-          </div>
+            onMouseOver={(e) => e.target.style.transform = "scale(1.1)"}
+            onMouseOut={(e) => e.target.style.transform = "scale(1)"}
+        />
         ))}
+    </div>
+
+    <button style={{
+        backgroundColor: "#2d4f64",
+        color: "#fff",
+        padding: "10px 20px",
+        borderRadius: "5px",
+        border: "none",
+        fontSize: "16px",
+        cursor: "pointer",
+        marginTop: "15px",
+        transition: "0.3s"
+    }}
+    onMouseOver={(e) => e.target.style.backgroundColor = "#1b3a50"}
+    onMouseOut={(e) => e.target.style.backgroundColor = "#2d4f64"}>
+        More
+    </button>
+    </div>
+
+
+    <div style={{ backgroundColor: "#a5a5a5", color: "#000", padding: "50px 20px", fontFamily: "sans-serif" }}>
+      {/* Top Part: Heading and Description */}
+      <div style={{ textAlign: "center", marginBottom: "50px" }}>
+        <h1 style={{ fontSize: "48px", fontWeight: "900", marginBottom: "20px" }}>
+          Ways to Bid & Buy at <span style={{ fontWeight: "900" }}>B<sub>2</sub>A<sub>2</sub> Auction</span>
+        </h1>
+        <p style={{ fontSize: "22px", maxWidth: "1200px", margin: "0 auto", fontWeight: "600" }}>
+          At Salvage Car Auctions, we offer our members the best auction experience with three convenient ways to bid & buy salvage, clean and repairable cars for sale.
+        </p>
+      </div>
+
+      {/* Bottom Part: Three Columns (Fixed Row Style) */}
+      <div style={{ display: "flex", justifyContent: "space-between", gap: "30px", flexWrap: "nowrap", maxWidth: "1400px", margin: "0 auto" }}>
+        {/* Left Column */}
+        <div style={{ flex: "1", maxWidth: "33%", minWidth: "0" }}>
+          <p style={{ fontSize: "20px", fontWeight: "600", lineHeight: "1.6" }}>
+            <strong>Bypass pre-bidding and live digital auctions on certain vehicles by instantaneously purchasing cars online with our "Buy It Now" option.</strong><br />
+            Although you may still bid on vehicles with the "Buy It Now" option if you'd like, you can also purchase them immediately at a pre-set price. View all "Buy It Now" cars for sale available right now.
+          </p>
+        </div>
+
+        {/* Middle Column */}
+        <div style={{ flex: "1", maxWidth: "33%", minWidth: "0" }}>
+          <p style={{ fontSize: "20px", fontWeight: "600", lineHeight: "1.6" }}>
+            <strong>Preliminary bidding, also known as a pre-bid,</strong> is a convenient type of bidding option which allows you to place an incremental value bid up to 1 hour before the live auto auction starts. Your pre-bid will be presented during the live auction and could be the winning bid if no other bidder submits a higher bid either during the live auction or during the pre-bidding phase.
+          </p>
+        </div>
+
+        {/* Right Column */}
+        <div style={{ flex: "1", maxWidth: "33%", minWidth: "0" }}>
+          <p style={{ fontSize: "20px", fontWeight: "600", lineHeight: "1.6" }}>
+            <strong>Live bidding</strong> is a type of internet bidding that allows you to place virtual bids on cars in real time. Enjoy the excitement of fast-paced online live auto auctions from anywhere, anytime. Participating in live car sales is easy; you compete against other bidders by placing incremental bids to become the high bidder and win the sale of the vehicle. Find cars & bids live today!
+          </p>
+        </div>
       </div>
     </div>
 
+
       {/* cars scrolling */}
       <div
-            style={{
-              textAlign: "center",
-              backgroundColor: "#f8f8f8",
-              padding: "40px 20px",
-            }}
-          >
+            style={{ textAlign: "center", backgroundColor: "#f8f8f8", padding: "40px 20px", }} >
             <h2
-              style={{
-                fontSize: "26px",
-                fontWeight: "700",
-                color: "#374151",
-                marginBottom: "20px",
-              }}
-            >
+              style={{ fontSize: "26px", fontWeight: "700", color: "#374151", marginBottom: "20px",}} >
               Featured Vehicles
             </h2>
 
             {/* Scrollable Vehicles List */}
             <div
-              style={{
-                display: "flex",
-                overflowX: "auto",
-                gap: "16px",
-                padding: "10px",
-                whiteSpace: "nowrap",
-                scrollbarWidth: "none",
-                msOverflowStyle: "none",
-                maxWidth: "100%",
-                scrollSnapType: "x mandatory",
-              }}
-            >
+              style={{ display: "flex", overflowX: "auto", gap: "16px", padding: "10px", whiteSpace: "nowrap", scrollbarWidth: "none", msOverflowStyle: "none", maxWidth: "100%", scrollSnapType: "x mandatory",}} >
               {vehicles.map((vehicle, index) => (
                 <div
                   key={index}
-                  style={{
-                    width: "260px",
-                    borderRadius: "6px",
-                    flex: "0 0 auto",
-                    position: "relative",
-                    overflow: "hidden",
-                    transition: "transform 0.3s ease-in-out",
-                    scrollSnapAlign: "center",
-                  }}
+                  style={{ width: "260px", borderRadius: "6px", flex: "0 0 auto", position: "relative",overflow: "hidden", transition: "transform 0.3s ease-in-out", scrollSnapAlign: "center",}}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = "scale(1.05)";
                     e.currentTarget.querySelector("img").style.filter = "brightness(1)";
@@ -309,63 +260,23 @@ const Home = () => {
                     <img
                       src={vehicle.image}
                       alt={vehicle.model}
-                      style={{
-                        width: "100%",
-                        height: "200px",
-                        objectFit: "cover",
-                        borderRadius: "4px",
-                        filter: "brightness(0.7)",
-                        transition: "filter 0.3s ease-in-out",
-                      }}
-                    />
+                      style={{ width: "100%", height: "200px", objectFit: "cover", borderRadius: "4px", filter: "brightness(0.7)", transition: "filter 0.3s ease-in-out", }}/>
                     {/* Vehicle Details */}
                     <div
                       className="details"
-                      style={{
-                        opacity: "0",
-                        position: "absolute",
-                        bottom: "10px",
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        textAlign: "center",
-                        transition: "opacity 0.3s ease-in-out",
-                      }}
-                    >
+                      style={{ opacity: "0", position: "absolute", bottom: "10px", left: "50%", transform: "translateX(-50%)", textAlign: "center", transition: "opacity 0.3s ease-in-out",}}>
                       <p
-                        style={{
-                          fontSize: "16px",
-                          fontWeight: "600",
-                          color: "#facc15",
-                          marginBottom: "4px",
-                        }}
-                      >
+                        style={{ fontSize: "16px", fontWeight: "600", color: "#facc15", marginBottom: "4px",}}>
                         {vehicle.price}
                       </p>
                       <p
-                        style={{
-                          fontSize: "14px",
-                          fontWeight: "500",
-                          color: "white",
-                        }}
-                      >
+                        style={{ fontSize: "14px", fontWeight: "500", color: "white",}}>
                         {vehicle.miles}
                       </p>
                     </div>
                     {/* Vehicle Year & Model */}
                     <p
-                      style={{
-                        position: "absolute",
-                        top: "10px",
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        fontSize: "18px",
-                        fontWeight: "700",
-                        color: "white",
-                        margin: "0",
-                        textAlign: "center",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
+                      style={{ position: "absolute", top: "10px", left: "50%", transform: "translateX(-50%)", fontSize: "18px", fontWeight: "700", color: "white", margin: "0", textAlign: "center", whiteSpace: "nowrap", }}>
                       {vehicle.year} {vehicle.make} {vehicle.model}
                     </p>
                   </div>
@@ -375,20 +286,122 @@ const Home = () => {
 
             {/* View All Button */}
             <button
-              style={{
-                backgroundColor: "#ea580c",
-                color: "white",
-                padding: "12px 24px",
-                borderRadius: "6px",
-                fontSize: "16px",
-                fontWeight: "600",
-                border: "none",
-                cursor: "pointer",
-                marginTop: "20px",
-              }}
-            >
+              style={{ backgroundColor: "#ea580c", color: "white", padding: "12px 24px", borderRadius: "6px", fontSize: "16px", fontWeight: "600", border: "none", cursor: "pointer", marginTop: "20px",}}>
               View All
             </button>
+      </div>
+
+      {/* about us */}
+      <div style={{  backgroundColor: '#f8f9fa', padding: '60px 20px', margin: '40px 0'}}>
+        <div style={{maxWidth: '1200px',margin: '0 auto',display: 'flex',flexWrap: 'wrap',gap: '40px',justifyContent: 'center',alignItems: 'center'}}>
+    
+      </div>
+      {/* Text Content */}
+      <div
+      ref={ref}
+      style={{
+        flex: '1 1 400px',
+        padding: '20px'
+      }}
+    >
+      <h2 style={{
+        fontSize: '2.5rem',
+        fontWeight: '700',
+        color: '#1F4C6B',
+        marginBottom: '20px',
+        position: 'relative',
+        display: 'inline-block'
+      }}>
+        About B2A2 Cars
+        <span style={{
+          position: 'absolute',
+          bottom: '-10px',
+          left: '0',
+          width: '60px',
+          height: '4px',
+          backgroundColor: '#ff9800'
+        }}></span>
+      </h2>
+
+      <p style={{
+        fontSize: '1.1rem',
+        lineHeight: '1.6',
+        color: '#333',
+        marginBottom: '25px'
+      }}>
+        Since 2025, B2A2 Cars has been revolutionizing the pre-owned vehicle market with 
+        our commitment to quality, transparency, and customer satisfaction. 
+        We bridge the gap between global markets and local buyers.
+      </p>
+
+      {/* Stats Grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '20px',
+        marginBottom: '30px'
+      }}>
+        {stats.map((stat, index) => (
+          <div key={index} style={{ textAlign: 'center' }}>
+            <h3 style={{ fontSize: '2rem', color: '#ff9800', margin: '0 0 5px 0' }}>
+              {inView && (
+                <CountUp
+                  end={stat.end}
+                  duration={2}
+                  suffix={stat.suffix}
+                />
+              )}
+            </h3>
+            <p style={{ fontSize: '0.9rem', color: '#666', margin: '0' }}>
+              {stat.label}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <button style={{
+        backgroundColor: '#1F4C6B',
+        color: 'white',
+        padding: '15px 40px',
+        fontSize: '1rem',
+        border: 'none',
+        borderRadius: '5px',
+        cursor: 'pointer',
+        fontWeight: 'bold',
+        transition: 'background 0.3s ease'
+      }}
+      onMouseOver={(e) => e.target.style.backgroundColor = '#153248'}
+      onMouseOut={(e) => e.target.style.backgroundColor = '#1F4C6B'}
+      >
+        MEET OUR TEAM
+      </button>
+    </div>
+
+          {/* Image Section */}
+          <div style={{ 
+            flex: '1 1 400px',
+            position: 'relative',
+            borderRadius: '10px',
+            overflow: 'hidden',
+            minHeight: '400px',
+            background: `url('https://images.unsplash.com/photo-1583121274602-3e2820c69888?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80') center/cover`
+          }}>
+            <div style={{
+              position: 'absolute',
+              bottom: '0',
+              left: '0',
+              right: '0',
+              padding: '20px',
+              backgroundColor: 'rgba(0,0,0,0.6)',
+              color: 'white',
+              textAlign: 'center'
+            }}>
+              <h3 style={{ margin: '0 0 10px 0' }}>Our St. Louis Facility</h3>
+              <p style={{ margin: '0', fontSize: '0.9rem' }}>
+                Visit our 50,000 sq.ft. state-of-the-art inspection center
+              </p>
+            </div>
+          </div>
       </div>
 
 
@@ -547,7 +560,7 @@ const Home = () => {
           wordWrap: "break-word",
         }}
       >
-        1999 - {new Date().getFullYear()} Powered by B2A2 Car. <br />
+        2025 - {new Date().getFullYear()} Powered by B2A2 Car. <br />
         By placing calls to this dealership, you agree to the {" "}
         <a href="#" style={{ color: "#ff9800", textDecoration: "none" }}>
           Terms and Conditions of Use.
