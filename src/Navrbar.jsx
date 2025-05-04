@@ -51,11 +51,26 @@ const Navbar = () => {
           <h2 style={{ margin: 0, fontWeight: "bold" }}>{messages[textIndex]}</h2>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-          <FontAwesomeIcon icon={faPhone} style={{ fontSize: "22px", cursor: "pointer" }} />
-          <FontAwesomeIcon icon={faWhatsapp} style={{ fontSize: "25px", cursor: "pointer" }} />
-          <FontAwesomeIcon icon={faTwitter} style={{ fontSize: "25px", cursor: "pointer" }} />
-          <FontAwesomeIcon icon={faInstagram} style={{ fontSize: "25px", cursor: "pointer" }} />
+          <a href="tel:+13147327749" target="_blank" rel="noopener noreferrer">
+            <FontAwesomeIcon icon={faPhone} style={{ fontSize: "22px", cursor: "pointer" }} />
+          </a>
+          <a href="https://wa.me/13147327749" target="_blank" rel="noopener noreferrer">
+            <FontAwesomeIcon icon={faWhatsapp} style={{ fontSize: "25px", cursor: "pointer", color: "#25D366" }} />
+          </a>
+          <a href="https://twitter.com/yourusername" target="_blank" rel="noopener noreferrer">
+            <FontAwesomeIcon icon={faTwitter} style={{ fontSize: "25px", cursor: "pointer", color: "#1DA1F2" }} />
+          </a>
+          <a href="https://instagram.com/yourusername" target="_blank" rel="noopener noreferrer">
+            <FontAwesomeIcon icon={faInstagram} style={{ fontSize: "25px", cursor: "pointer", color: "#C13584" }} />
+          </a>
+          <a href="https://facebook.com/yourusername" target="_blank" rel="noopener noreferrer">
+            <FontAwesomeIcon icon={faFacebook} style={{ fontSize: "25px", cursor: "pointer", color: "#1877F2" }} />
+          </a>
+          <a href="https://linkedin.com/in/yourusername" target="_blank" rel="noopener noreferrer">
+            <FontAwesomeIcon icon={faLinkedin} style={{ fontSize: "25px", cursor: "pointer", color: "#0077B5" }} />
+          </a>
         </div>
+
       </div>
 
       {/* Search + Nav + Location Row */}
