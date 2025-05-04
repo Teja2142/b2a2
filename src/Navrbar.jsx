@@ -69,7 +69,7 @@ const Navbar = () => {
           <a href="https://linkedin.com/in/yourusername" target="_blank" rel="noopener noreferrer">
             <FontAwesomeIcon icon={faLinkedin} style={{ fontSize: "25px", cursor: "pointer", color: "#0077B5" }} />
           </a>
-        </div>
+        </div> 
 
       </div>
 
