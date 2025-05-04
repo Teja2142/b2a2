@@ -3,6 +3,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch, faMicrophone, faCamera, faPhone } from "@fortawesome/free-solid-svg-icons";
 import { faFacebook, faTwitter, faInstagram, faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 import { Link } from 'react-router-dom';
+import { faPhone } from '@fortawesome/free-solid-svg-icons';
+import { faWhatsapp, faTwitter, faInstagram, faFacebook, faLinkedin } from '@fortawesome/free-brands-svg-icons';
+
 
 
 const Navbar = () => {
