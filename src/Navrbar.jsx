@@ -101,7 +101,7 @@ const Navbar = () => {
           <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Auctions"> AUCTION </Link> </li>
           <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/About">ABOUT US </Link></li>
           <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Contact"> CONTACT </Link></li>
-          <li>SERVICES</li>
+          <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Services"> SERVICES </Link></li>
           <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Login">LOGIN</Link></li>
           <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Admin">Admin</Link></li>
 
