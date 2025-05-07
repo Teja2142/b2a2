@@ -10,6 +10,7 @@ import test2 from './test2';
 import Auctions from './Auctions';
 import About from './About';
 import Contact from './Contact';
+import Services from './Services';
 
 
 
@@ -28,6 +29,7 @@ function App() {
         <Route path='/Auctions' element={<Auctions/>}/>
         <Route path="/About" element={<About />} />
         <Route path='/Contact' element={<Contact/>}/>
+        <Route path='/Services' element={<Services/>}/>
       </Routes>
     </BrowserRouter>
   );
