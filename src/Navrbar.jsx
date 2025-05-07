@@ -8,7 +8,7 @@ import { faWhatsapp, faTwitter, faInstagram, faFacebook, faLinkedin } from '@for
 
 const Navbar = () => {
   const [location, setLocation] = useState("Detecting...");
-  const [language, setLanguage] = useState("Detecting...");
+  const [language, setLanguage] = useState("Detecting..."); 
   const [hoveredMenu, setHoveredMenu] = useState(null);
   const [textIndex, setTextIndex] = useState(0);
   const messages = ["WELL COME TO B2A2 CARS CLUB", "DREAM YOUR CARS WITH US"];
