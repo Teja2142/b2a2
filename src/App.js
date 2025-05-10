@@ -10,7 +10,11 @@ import test2 from './test2';
 import Auctions from './Auctions';
 import About from './About';
 import Contact from './Contact';
+<<<<<<< HEAD
 import Services from './services';
+=======
+import Services from './Services';
+>>>>>>> ffb46a4e4cda14de6e274c7650326d54a8936ba5
 
 
 
@@ -29,7 +33,11 @@ function App() {
         <Route path='/Auctions' element={<Auctions/>}/>
         <Route path="/About" element={<About />} />
         <Route path='/Contact' element={<Contact/>}/>
+<<<<<<< HEAD
         <Route path='/services' element={<Services/>}/>
+=======
+        <Route path='/Services' element={<Services/>}/>
+>>>>>>> ffb46a4e4cda14de6e274c7650326d54a8936ba5
       </Routes>
     </BrowserRouter>
   );
