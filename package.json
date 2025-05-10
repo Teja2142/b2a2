@@ -2,7 +2,7 @@
   "name": "b2a2",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://Teja2142.github.io/b2a2",
+  "homepage": ".",
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-brands-svg-icons": "^6.7.2",
