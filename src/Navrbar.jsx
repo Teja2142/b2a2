@@ -3,20 +3,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch, faMicrophone, faCamera, faPhone } from "@fortawesome/free-solid-svg-icons";
 import { Link } from 'react-router-dom';
 import { faWhatsapp, faTwitter, faInstagram, faFacebook, faLinkedin } from '@fortawesome/free-brands-svg-icons';
-<<<<<<< HEAD
 
 const Navbar = () => {
   const [location, setLocation] = useState("Detecting...");
   const [language, setLanguage] = useState("Detecting...");
-=======
-
-
-
-const Navbar = () => {
-  const [location, setLocation] = useState("Detecting...");
-  const [language, setLanguage] = useState("Detecting..."); 
-  const [hoveredMenu, setHoveredMenu] = useState(null);
->>>>>>> ffb46a4e4cda14de6e274c7650326d54a8936ba5
   const [textIndex, setTextIndex] = useState(0);
   const messages = ["WELCOME TO B2A2 CARS CLUB", "DREAM YOUR CARS WITH US"];
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -87,41 +77,7 @@ const Navbar = () => {
             <h2 style={{ margin: 0, fontWeight: "bold" }}>B<sub>2</sub>A<sub>2</sub> CARS CLUB</h2>
           </div>
         </div>
-<<<<<<< HEAD
-        
-        {!isMobile && (
-          <div style={{ textAlign: "center", flexGrow: 1 }}>
-            <h2 style={{ margin: 0, fontWeight: "bold" }}>{messages[textIndex]}</h2>
-          </div>
-        )}
 
-        <div style={{ 
-          display: "flex", 
-          alignItems: "center", 
-          gap: isMobile ? "10px" : "15px",
-          flexWrap: "wrap",
-          justifyContent: isMobile ? "center" : "flex-end"
-        }}>
-          <a href={socialLinks.phone} target="_blank" rel="noopener noreferrer" aria-label="Call us">
-            <FontAwesomeIcon icon={faPhone} style={{ fontSize: "22px", cursor: "pointer", color: "#fff" }} />
-          </a>
-          <a href={socialLinks.whatsapp} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
-            <FontAwesomeIcon icon={faWhatsapp} style={{ fontSize: "25px", cursor: "pointer", color: "#25D366" }} />
-          </a>
-          <a href={socialLinks.twitter} target="_blank" rel="noopener noreferrer" aria-label="Twitter">
-            <FontAwesomeIcon icon={faTwitter} style={{ fontSize: "25px", cursor: "pointer", color: "#1DA1F2" }} />
-          </a>
-          <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-            <FontAwesomeIcon icon={faInstagram} style={{ fontSize: "25px", cursor: "pointer", color: "#C13584" }} />
-          </a>
-          <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-            <FontAwesomeIcon icon={faFacebook} style={{ fontSize: "25px", cursor: "pointer", color: "#1877F2" }} />
-          </a>
-          <a href={socialLinks.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
-            <FontAwesomeIcon icon={faLinkedin} style={{ fontSize: "25px", cursor: "pointer", color: "#0077B5" }} />
-          </a>
-        </div> 
-=======
         <div style={{ textAlign: "center", flexGrow: 1 }}>
           <h2 style={{ margin: 0, fontWeight: "bold" }}>{messages[textIndex]}</h2>
         </div>
@@ -146,7 +102,11 @@ const Navbar = () => {
           </a>
         </div> 
 
->>>>>>> ffb46a4e4cda14de6e274c7650326d54a8936ba5
+
+        
+        
+
+        
       </div>
 
       {/* Search + Nav + Location Row */}
@@ -195,7 +155,6 @@ const Navbar = () => {
             gap: isMobile ? "10px" : "20px",
             fontSize: isMobile ? "14px" : "16px",
             fontWeight: "bold",
-<<<<<<< HEAD
             margin: isMobile ? "10px 0" : "0",
             padding: 0,
             flexWrap: "wrap",
@@ -212,19 +171,6 @@ const Navbar = () => {
             <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Login">LOGIN</Link></li>
             <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Admin">Admin</Link></li>
           </ul>
-=======
-            marginLeft: "30px", // Adjusted margin to align properly
-          }}
-        >
-          <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/">HOME </Link></li>
-          <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/vehicles">VEHICLES </Link></li>
-          <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Auctions"> AUCTION </Link> </li>
-          <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/About">ABOUT US </Link></li>
-          <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Contact"> CONTACT </Link></li>
-          <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Services"> SERVICES </Link></li>
-          <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Login">LOGIN</Link></li>
-          <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Admin">Admin</Link></li>
->>>>>>> ffb46a4e4cda14de6e274c7650326d54a8936ba5
 
           {/* Location - Hidden on mobile */}
           {!isMobile && (
