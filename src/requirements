@@ -1,0 +1,10 @@
+git add build/ package.json
+
+
+
+git commit -m "Fix: homepage and build for deployment"
+git push
+
+
+
+for new push of codes

@@ -6,13 +6,12 @@ import CountUp from 'react-countup';
 
   
 
-
 const carImages = [
   "https://cdn07.carsforsale.com/CustomTemplatePhotos/1035164/photos/ss1.jpg",
   "https://cdn07.carsforsale.com/CustomTemplatePhotos/1035164/photos/ss3.jpg",
   "https://cdn07.carsforsale.com/CustomTemplatePhotos/1035164/photos/ss2.jpg",
 ];
-
+  
 const Home = () => {
 
   const { ref, inView } = useInView({ triggerOnce: true });
