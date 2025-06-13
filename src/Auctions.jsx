@@ -30,8 +30,8 @@ const Auctions = () => {
 
   // Define your Django API endpoints
   const apiEndpoints = {
-    today: 'http://3.111.149.204:8000//api/today-auctions/',
-    live: 'http://3.111.149.204:8000//api/live-auctions/',
+    today: 'http://3.111.149.204:8000/api/today-auctions/',
+    live: 'http://3.111.149.204:8000/api/live-auctions/',
     calendar: 'http://3.111.149.204:8000/api/auction-calendar/',
   };
 
