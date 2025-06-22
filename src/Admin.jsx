@@ -197,6 +197,7 @@ const Admin = () => {
                 Add New User
               </button>
             </div>
+            {/* admin page changes */}
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ backgroundColor: '#f8f9fa' }}>
