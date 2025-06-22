@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Navigate } from 'react-router-dom';
 
 export default function Login({ navigateTo }) {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,21 +21,34 @@ export default function Login({ navigateTo }) {
     setLoading(true);
     setError('');
 
+    // Check for hardcoded admin credentials (fix typo in email)
+    if (email === 'admin@gmail.com' && password === 'Teja@2142') {
+      localStorage.setItem('authToken', 'admin-token');
+      localStorage.setItem('user', JSON.stringify({ email, role: 'admin', password }));
+      setRedirectTo('/Admin');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const response = await axios.post('http://localhost:5000/token', {
-        username,
+      const response = await axios.post('http://127.0.0.1:8000/api/users/login/', {
+        email,
         password,
       });
 
-      const { access, refresh } = response.data;
+      const { token, user } = response.data;
+      // Ensure user object has a role property for admin check
+      if (user && user.isAdmin) {
+        user.role = 'admin';
+      }
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('user', JSON.stringify(user));
 
-      localStorage.setItem('accessToken', access);
-      localStorage.setItem('refreshToken', refresh);
-
-      console.log('Login successful');
       setRedirectTo('/dashboard');
     } catch (err) {
-      setError('Invalid credentials. Please try again.');
+      setError(
+        err.response?.data?.message || 'Invalid credentials. Please try again.'
+      );
     } finally {
       setLoading(false);
     }
@@ -47,7 +60,7 @@ export default function Login({ navigateTo }) {
 
   const handleSendOTP = async () => {
     try {
-      const res = await axios.post('http://localhost:5000/api/users/password-reset', {
+      const res = await axios.post('http://localhost:8000/api/users/password-reset', {
         username: emailOrUsername,
       });
       setOtp(res.data.otp);
@@ -70,7 +83,7 @@ export default function Login({ navigateTo }) {
     }
 
     try {
-      await axios.post('http://localhost:5000/api/users/password-reset/confirm', {
+      await axios.post('http://localhost:8000/api/users/password-reset/confirm', {
         username: emailOrUsername,
         new_password: newPassword,
       });
@@ -91,12 +104,12 @@ export default function Login({ navigateTo }) {
         <h2 style={{ fontSize: '24px', fontWeight: 'bold', textAlign: 'center', color: '#1f2937' }}>Welcome Back</h2>
         <form style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }} onSubmit={handleLogin}>
           <div>
-            <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '14px', fontWeight: '500', color: '#4b5563' }}>Username</label>
+            <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '14px', fontWeight: '500', color: '#4b5563' }}>Email</label>
             <input
-              type="text"
+              type="email"
               style={{ width: '100%', padding: '0.5rem 1rem', backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db', borderRadius: '0.5rem', outline: 'none' }}
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>

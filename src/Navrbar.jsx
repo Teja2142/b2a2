@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch, faMicrophone, faCamera, faPhone } from "@fortawesome/free-solid-svg-icons";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { faWhatsapp, faTwitter, faInstagram, faFacebook, faLinkedin } from '@fortawesome/free-brands-svg-icons';
 
 const Navbar = () => {
@@ -10,6 +10,8 @@ const Navbar = () => {
   const [textIndex, setTextIndex] = useState(0);
   const messages = ["WELCOME TO B2A2 CARS CLUB", "DREAM YOUR CARS WITH US"];
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('user'));
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleResize = () => {
@@ -39,6 +41,13 @@ const Navbar = () => {
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    // Listen for login/logout changes
+    const handleStorage = () => setIsLoggedIn(!!localStorage.getItem('user'));
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
   const getLanguageByCountry = (code) => {
     const languageMap = {
       US: "English", IN: "English", FR: "French", DE: "German", 
@@ -46,6 +55,13 @@ const Navbar = () => {
       ES: "Spanish", BR: "Portuguese", IT: "Italian",
     };
     return languageMap[code] || "English";
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+    setIsLoggedIn(false);
+    navigate('/');
   };
 
   // Replace these with your actual social media links
@@ -168,7 +184,11 @@ const Navbar = () => {
             <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/About">ABOUT US</Link></li>
             <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Contact">CONTACT</Link></li>
             <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Services">SERVICES</Link></li>
-            <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Login">LOGIN</Link></li>
+            {isLoggedIn ? (
+              <li><button style={{ color: "#fff", background: "none", border: "none", cursor: "pointer" }} onClick={handleLogout}>LOGOUT</button></li>
+            ) : (
+              <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Login">LOGIN</Link></li>
+            )}
             <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Admin">Admin</Link></li>
           </ul>
 
