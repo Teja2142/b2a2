@@ -189,7 +189,6 @@ const Navbar = () => {
             ) : (
               <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Login">LOGIN</Link></li>
             )}
-            <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Admin">Admin</Link></li>
           </ul>
 
           {/* Location - Hidden on mobile */}
