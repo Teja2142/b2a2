@@ -11,6 +11,7 @@ import Auctions from './Auctions';
 import About from './About';
 import Contact from './Contact';
 import Services from './services';
+import Vehicle from './Vehicle';
 
 
 
@@ -30,6 +31,7 @@ function App() {
         <Route path="/About" element={<About />} />
         <Route path='/Contact' element={<Contact/>}/>
         <Route path='/Services' element={<Services/>}/>
+        <Route path='/Vehicle' element={<Vehicle/>}/>
       </Routes>
     </BrowserRouter>
   );
