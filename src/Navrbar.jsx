@@ -11,6 +11,26 @@ const Navbar = () => {
   const navigate = useNavigate();
   const messages = ["WELCOME TO B2A2 CARS CLUB", "DREAM YOUR CARS WITH US"];
 
+  const countryLangMap = {
+    'India': 'hi',
+    'France': 'fr',
+    'Germany': 'de',
+    'Spain': 'es',
+    'China': 'zh-CN',
+    'Japan': 'ja',
+    'Russia': 'ru',
+    'Brazil': 'pt',
+    'Mexico': 'es',
+    'Saudi Arabia': 'ar',
+    'Indonesia': 'id',
+    'Vietnam': 'vi',
+    'South Korea': 'ko',
+    'Italy': 'it',
+    'United States': 'en',
+    'United Kingdom': 'en',
+    'Canada': 'en',
+  };
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
@@ -33,6 +53,7 @@ const Navbar = () => {
       if (!window.googleTranslateElementInit) {
         window.googleTranslateElementInit = function () {
           new window.google.translate.TranslateElement({ pageLanguage: 'en', layout: window.google.translate.TranslateElement.InlineLayout.VERTICAL }, 'google_translate_element');
+
           const observer = new MutationObserver(() => {
             const poweredBy = document.querySelector('.goog-logo-link');
             const branding = document.querySelector('.goog-te-gadget span');
@@ -41,12 +62,35 @@ const Navbar = () => {
           });
           observer.observe(document.body, { childList: true, subtree: true });
         };
+
         const script = document.createElement('script');
         script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
         document.body.appendChild(script);
       }
     };
+
+    const autoDetectLanguage = async () => {
+      try {
+        const res = await fetch('https://ipapi.co/json/');
+        const data = await res.json();
+        const country = data.country_name;
+        const langCode = countryLangMap[country] || 'en';
+
+        // Wait a bit for Google Translate dropdown to render
+        setTimeout(() => {
+          const select = document.querySelector('select.goog-te-combo');
+          if (select) {
+            select.value = langCode;
+            select.dispatchEvent(new Event("change"));
+          }
+        }, 3000);
+      } catch (err) {
+        console.error("Location fetch failed", err);
+      }
+    };
+
     addTranslateScript();
+    autoDetectLanguage();
   }, []);
 
   const handleLogout = () => {
