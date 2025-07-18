@@ -76,14 +76,26 @@ const Navbar = () => {
         const country = data.country_name;
         const langCode = countryLangMap[country] || 'en';
 
-        // Wait a bit for Google Translate dropdown to render
-        setTimeout(() => {
-          const select = document.querySelector('select.goog-te-combo');
-          if (select) {
-            select.value = langCode;
-            select.dispatchEvent(new Event("change"));
+        // Wait for the Translate library to load
+        const interval = setInterval(() => {
+          if (window.google && window.google.translate && window.google.translate.TranslateElement) {
+            new window.google.translate.TranslateElement({
+              pageLanguage: 'en',
+              includedLanguages: Object.values(countryLangMap).join(','),
+              layout: window.google.translate.TranslateElement.InlineLayout.VERTICAL,
+              autoDisplay: false
+            }, 'google_translate_element');
+
+            // Force language switch
+            const select = document.querySelector('.goog-te-combo');
+            if (select) {
+              select.value = langCode;
+              select.dispatchEvent(new Event("change"));
+            }
+
+            clearInterval(interval);
           }
-        }, 3000);
+        }, 500);
       } catch (err) {
         console.error("Location fetch failed", err);
       }
