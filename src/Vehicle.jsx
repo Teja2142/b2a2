@@ -103,7 +103,7 @@ const Vehicle = () => {
     setIsSubmitting(true);
 
     try {
-      await axios.post("http://127.0.0.1:8000/api/vehicles/", formData);
+      await axios.post("http://127.0.0.1:8000/api/vehicles/vehicles/", formData);
       setMessage("✅ Vehicle listed successfully!");
       setTimeout(() => setMessage(""), 5000);
     } catch (error) {
