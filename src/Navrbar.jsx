@@ -146,7 +146,7 @@ const Navbar = () => {
             <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/About">ABOUT US</Link></li>
             <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Contact">CONTACT</Link></li>
             <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Services">SERVICES</Link></li>
-            {isLoggedIn ? (<li><button style={{ color: "#fff", background: "none", border: "none", cursor: "pointer" }} onClick={handleLogout}>LOGOUT</button></li>) : (<li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Login">LOGIN</Link></li>)}
+            {isLoggedIn ? (<li><button style={{ color: "#ff0000ff",  background: "none", border: "none", cursor: "pointer" , fontWeight: "bold", fontSize: "16px"}} onClick={handleLogout}>LOGOUT</button></li>) : (<li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Login">LOGIN</Link></li>)}
           </ul>
 
           <div id="google_translate_element" style={{ color: "#fff", fontSize: "16px", order: 3, maxHeight: "150px", overflowY: "auto", padding: "10px", backgroundColor: "#1d3a4d", borderRadius: "8px", minWidth: "150px", flex: isMobile ? "1 1 100%" : "initial", alignSelf: "center" }}></div>

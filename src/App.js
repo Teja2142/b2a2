@@ -12,6 +12,8 @@ import About from './About';
 import Contact from './Contact';
 import Services from './services';
 import Vehicle from './Vehicle';
+import Profile from './Profile';
+import Bidding from './Bidding';
 
 
 
@@ -32,6 +34,8 @@ function App() {
         <Route path='/Contact' element={<Contact/>}/>
         <Route path='/Services' element={<Services/>}/>
         <Route path='/Vehicle' element={<Vehicle/>}/>
+        <Route path="/profile" element={<Profile />} />
+        <Route path='/Bidding' element={<Bidding/>}/>
       </Routes>
     </BrowserRouter>
   );

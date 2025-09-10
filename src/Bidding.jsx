@@ -99,11 +99,10 @@ const Auctions = () => {
   const handleBidClick = (auctionId) => {
     const auction = auctions.find(a => a.id === auctionId);
     if (auction && auction.vehicle) {
-        // Navigate to the bidding page with both IDs
-        navigate(`/Bidding/${auctionId}/${auction.vehicle}`);
+        // ***FIX: Navigate to a lowercase URL for standard practice***
+        navigate(`/bidding/${auctionId}/${auction.vehicle}`);
     } else {
         console.error("Could not find auction or vehicle to navigate.");
-        // Optionally, show an error to the user
     }
   };
 
@@ -219,3 +218,4 @@ const styles = {
 };
 
 export default Auctions;
+
