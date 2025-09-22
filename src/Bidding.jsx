@@ -56,7 +56,7 @@ const Auctions = () => {
       setError(null);
       try {
         // --- Step 1: Fetch all auctions ---
-        const auctionsResponse = await fetch("http://127.0.0.1:8000/api/auction/auctions/");
+        const auctionsResponse = await fetch("https://api.b2a2cars.com/api/auction/auctions/");
         if (!auctionsResponse.ok) {
           throw new Error('Failed to fetch auctions');
         }
@@ -72,7 +72,7 @@ const Auctions = () => {
         setAuctions(liveAuctions);
 
         // --- Step 3: Fetch all vehicles ---
-        const vehiclesResponse = await fetch("http://127.0.0.1:8000/api/vehicles/vehicles/");
+        const vehiclesResponse = await fetch("https://api.b2a2cars.com/api/vehicles/vehicles/");
         if (!vehiclesResponse.ok) {
           throw new Error('Failed to fetch vehicles');
         }

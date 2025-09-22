@@ -141,7 +141,7 @@ const Navbar = () => {
 
           <ul style={{ listStyle: "none", display: "flex", alignItems: "center", gap: isMobile ? "10px" : "20px", fontSize: isMobile ? "14px" : "16px", fontWeight: "bold", margin: isMobile ? "10px 0" : "0", padding: 0, flexWrap: "wrap", justifyContent: isMobile ? "center" : "flex-start", order: isMobile ? 1 : 0, flex: isMobile ? "1 1 100%" : "initial" }}>
             <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/">HOME</Link></li>
-            <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/vehicles">VEHICLES</Link></li>
+            {/* <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/vehicles">VEHICLES</Link></li> */}
             <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Auctions">AUCTION</Link></li>
             <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/About">ABOUT US</Link></li>
             <li><Link style={{ color: "#fff", textDecoration: "none" }} to="/Contact">CONTACT</Link></li>

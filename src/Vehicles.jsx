@@ -14,7 +14,7 @@ const Vehicles = () => {
 
   useEffect(() => {
     // Fetch vehicle data from Django backend
-    fetch("http://127.0.0.1:8000/api/vehicles/vehicles/")
+    fetch("https://api.b2a2cars.com/api/vehicles/vehicles/")
       .then((res) => res.json())
       .then((data) => setVehicles(data))
       .catch((err) => console.error("Error fetching data:", err));

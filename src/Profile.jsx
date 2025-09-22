@@ -97,7 +97,7 @@ export default function Register() {
 
     try {
       // Replace with your actual API endpoint
-      const response = await axios.post('http://127.0.0.1:8000/api/users/register/', formData, {
+      const response = await axios.post('https://api.b2a2cars.com/api/users/register/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

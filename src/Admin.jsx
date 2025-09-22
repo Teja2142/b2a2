@@ -16,7 +16,7 @@ const Admin = () => {
       return;
     }
     // Fetch cars
-    fetch('http://127.0.0.1:8000/api/auction/vehicles/')
+    fetch('https://api.b2a2cars.com/api/auction/vehicles/')
       .then(res => res.json())
       .then(data => setCars(data))
       .catch(() => setCars([]));

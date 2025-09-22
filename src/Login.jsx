@@ -246,7 +246,7 @@ export default function Login() {
 
     try {
       // ***FIX:*** Reverted to send `email` to match backend expectation.
-      const response = await axios.post('http://localhost:8000/api/users/login/', {
+      const response = await axios.post('https://api.b2a2cars.com/api/users/login/', {
         email: email, // Changed 'username' key back to 'email'
         password,
       }, {
@@ -283,7 +283,7 @@ export default function Login() {
     }
 
     try {
-      const response = await axios.post('http://localhost:8000/api/users/password-reset/', {
+      const response = await axios.post('https://api.b2a2cars.com/api/users/password-reset/', {
         username: emailOrUsername,
       }, {
         timeout: 10000,
@@ -315,7 +315,7 @@ export default function Login() {
     }
 
     try {
-      const response = await axios.post('http://localhost:8000/api/users/password-reset/confirm/', {
+      const response = await axios.post('https://api.b2a2cars.com/api/users/password-reset/confirm/', {
         username: emailOrUsername,
         otp: enteredOtp,
         new_password: newPassword,
