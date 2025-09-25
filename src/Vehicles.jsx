@@ -9,7 +9,7 @@ const Vehicles = () => {
     model: "All",
     maxPrice: "All",
     maxMileage: "All",
-    availability: "All", // New filter for vehicle availability
+    availability: "All", 
   });
 
   useEffect(() => {
