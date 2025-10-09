@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Navigate } from 'react-router-dom';
 
@@ -12,13 +12,13 @@ const FaMapMarkerAlt = () => <svg stroke="currentColor" fill="currentColor" stro
 
 // --- Data (to remove external dependencies) ---
 const countryList = [
-    { name: 'United States', code: 'US' },
-    { name: 'Canada', code: 'CA' },
-    { name: 'United Kingdom', code: 'GB' },
-    { name: 'Australia', code: 'AU' },
-    { name: 'Germany', code: 'DE' },
-    { name: 'India', code: 'IN' },
-    { name: 'Japan', code: 'JP' },
+    { name: 'United States', code: 'US', dialCode: '+1' },
+    { name: 'Canada', code: 'CA', dialCode: '+1' },
+    { name: 'United Kingdom', code: 'GB', dialCode: '+44' },
+    { name: 'Australia', code: 'AU', dialCode: '+61' },
+    { name: 'Germany', code: 'DE', dialCode: '+49' },
+    { name: 'India', code: 'IN', dialCode: '+91' },
+    { name: 'Japan', code: 'JP', dialCode: '+81' },
 ];
 
 const currencyList = [
@@ -31,20 +31,20 @@ const currencyList = [
     { code: 'INR', name: 'Indian Rupee' },
 ];
 
-
 export default function Register() {
   const [formType, setFormType] = useState('customer');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [country, setCountry] = useState('');
+  const [countryCode, setCountryCode] = useState('');
   const [state, setState] = useState('');
   const [address, setAddress] = useState('');
   const [zipCode, setZipCode] = useState('');
   const [gender, setGender] = useState('');
   const [language, setLanguage] = useState('en');
   const [currency, setCurrency] = useState('USD');
-  const [dob, setDob] = useState(''); // Changed to string for input[type="date"]
+  const [dob, setDob] = useState('');
   const [idFile, setIdFile] = useState(null);
   const [profilePic, setProfilePic] = useState(null);
   const [password, setPassword] = useState('');
@@ -53,15 +53,68 @@ export default function Register() {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [redirectToLogin, setRedirectToLogin] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
+
+  // Update country code when country changes
+  useEffect(() => {
+    if (country) {
+      const selectedCountry = countryList.find(c => c.name === country);
+      if (selectedCountry) {
+        setCountryCode(selectedCountry.dialCode);
+        setPhoneNumber(selectedCountry.dialCode + ' ');
+      }
+    } else {
+      setCountryCode('');
+      setPhoneNumber('');
+    }
+  }, [country]);
+
+  const handlePhoneChange = (e) => {
+    const value = e.target.value;
+    
+    // If user tries to delete country code, prevent it
+    if (countryCode && value.length < countryCode.length + 1) {
+      return;
+    }
+    
+    // Only allow numbers after country code
+    const numbersOnly = value.replace(/[^\d]/g, '');
+    
+    if (countryCode) {
+      // Format: +1 1234567890 (max 10 digits after country code)
+      const phoneDigits = numbersOnly.slice(countryCode.replace('+', '').length);
+      if (phoneDigits.length <= 10) {
+        setPhoneNumber(countryCode + ' ' + phoneDigits);
+      }
+    } else {
+      // If no country selected, just take first 15 digits
+      if (numbersOnly.length <= 15) {
+        setPhoneNumber(numbersOnly);
+      }
+    }
+  };
 
   const handleFileChange = (setter) => (e) => {
     setter(e.target.files[0]);
+  };
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePhone = (phone) => {
+    if (!countryCode) return true; // Skip validation if no country selected
+    const digitsOnly = phone.replace(/[^\d]/g, '');
+    const expectedLength = countryCode.replace('+', '').length + 10;
+    return digitsOnly.length === expectedLength;
   };
 
   const validatePassword = (pwd) => {
     if (pwd.length < 8) return 'Password must be at least 8 characters long.';
     if (!/[A-Z]/.test(pwd)) return 'Password must contain one uppercase letter.';
     if (!/\d/.test(pwd)) return 'Password must contain one digit.';
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) return 'Password must contain one special character.';
     return '';
   };
 
@@ -69,6 +122,18 @@ export default function Register() {
     e.preventDefault();
     setError('');
     setSuccessMessage('');
+
+    // Email validation
+    if (!validateEmail(email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    // Phone validation
+    if (!validatePhone(phoneNumber)) {
+      setError(`Please enter a valid 10-digit phone number for ${country}`);
+      return;
+    }
 
     const passwordValidationError = validatePassword(password);
     if (passwordValidationError) {
@@ -90,12 +155,12 @@ export default function Register() {
     formData.append('form_type', formType);
     formData.append('full_name', fullName);
     formData.append('email', email);
-    formData.append('phone', phone);
+    formData.append('phone', phoneNumber);
     formData.append('password', password);
     formData.append('confirm_password', confirmPassword);
 
     if (country) formData.append('country', country);
-    if (dob) formData.append('dob', dob); // Send date string directly
+    if (dob) formData.append('dob', dob);
     if (state) formData.append('state', state);
     if (address) formData.append('address', address);
     if (zipCode) formData.append('zip_code', zipCode);
@@ -110,9 +175,16 @@ export default function Register() {
 
     try {
       console.log('Form Data:', Object.fromEntries(formData));
-      const response = await axios.post('https://api.b2a2cars.com/api/users/register/', formData, {
+      
+      // Different API endpoints for customer and dealer
+      const apiUrl = formType === 'customer' 
+        ? 'https://api.b2a2cars.com/api/customers/register/'
+        : 'https://api.b2a2cars.com/api/dealers/register/';
+      
+      const response = await axios.post(apiUrl, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
+      
       setSuccessMessage("Registration successful!");
       setTimeout(() => setRedirectToLogin(true), 1500);
     } catch (err) {
@@ -147,51 +219,96 @@ export default function Register() {
 
         <form onSubmit={handleSubmit}>
           {/* --- Required Fields --- */}
-          <div className="form-group">
-            <label htmlFor="fullName">Full Name</label>
-            <input id="fullName" type="text" placeholder="John Doe" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+          <div className="form-row">
+            <div className="form-group required">
+              <label htmlFor="fullName">Full Name</label>
+              <input 
+                id="fullName" 
+                type="text" 
+                placeholder="John Doe" 
+                value={fullName} 
+                onChange={(e) => setFullName(e.target.value)} 
+                required 
+              />
+            </div>
+            <div className="form-group required">
+              <label htmlFor="email-address">Email Address</label>
+              <input 
+                id="email-address" 
+                type="email" 
+                placeholder="your@email.com" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                required 
+              />
+            </div>
           </div>
-          <div className="form-group">
-            <label htmlFor="email-address">Email Address</label>
-            <input id="email-address" type="email" placeholder="your@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          </div>
-          <div className="form-group">
-            <label htmlFor="phone">Phone Number</label>
-            <input id="phone" type="tel" placeholder="+1 1234567890" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength="15" required />
+
+          <div className="form-row">
+            <div className="form-group required">
+              <label htmlFor="phone">Phone Number</label>
+              <input 
+                id="phone" 
+                type="tel" 
+                placeholder={countryCode ? `${countryCode} 1234567890` : "+1 1234567890"} 
+                value={phoneNumber} 
+                onChange={handlePhoneChange}
+                required 
+              />
+            </div>
+            <div className="form-group required">
+              <label htmlFor="country">Country</label>
+              <div className="select-wrapper">
+                <FaGlobe />
+                <select 
+                  id="country" 
+                  value={country} 
+                  onChange={(e) => setCountry(e.target.value)} 
+                  required
+                >
+                  <option value="">Select your country</option>
+                  {countryList.map((c) => (
+                    <option key={c.code} value={c.name}>{c.name} ({c.dialCode})</option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
 
           {/* --- Optional Fields --- */}
-          <div className="form-group">
-            <label htmlFor="country">Country</label>
-            <div className="select-wrapper">
-              <FaGlobe />
-              <select id="country" value={country} onChange={(e) => setCountry(e.target.value)}>
-                <option value="">Select your country (optional)</option>
-                {countryList.map((c) => (
-                  <option key={c.code} value={c.name}>{c.name}</option>
-                ))}
-              </select>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="dob">Date of Birth</label>
+              <input
+                type="date"
+                id="dob"
+                className="date-picker"
+                value={dob}
+                onChange={(e) => setDob(e.target.value)}
+                max={new Date().toISOString().split("T")[0]}
+              />
             </div>
-          </div>
-        
-          <div className="form-group">
-            <label htmlFor="dob">Date of Birth</label>
-            <input
-              type="date"
-              id="dob"
-              className="date-picker"
-              value={dob}
-              onChange={(e) => setDob(e.target.value)}
-              max={new Date().toISOString().split("T")[0]} // Today's date
-            />
-          </div>
-
-          {formType === 'customer' ? (
-            <>
+            {formType === 'customer' ? (
               <div className="form-group">
                 <label htmlFor="state">State/Province</label>
                 <input id="state" type="text" placeholder="California (optional)" value={state} onChange={(e) => setState(e.target.value)} />
               </div>
+            ) : (
+              <div className="form-group">
+                <label htmlFor="gender">Gender</label>
+                <select id="gender" value={gender} onChange={(e) => setGender(e.target.value)}>
+                  <option value="">Select gender (optional)</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                  <option value="prefer_not_to_say">Prefer not to say</option>
+                </select>
+              </div>
+            )}
+          </div>
+
+          {formType === 'customer' ? (
+            <>
               <div className="form-group">
                 <label htmlFor="address">Address</label>
                 <div className="input-with-icon">
@@ -218,11 +335,11 @@ export default function Register() {
             </>
           ) : ( // Dealer fields
             <>
-             <div className="form-group">
-                <label htmlFor="address">Address</label>
+              <div className="form-group">
+                <label htmlFor="address">Business Address</label>
                 <div className="input-with-icon">
                   <FaMapMarkerAlt />
-                  <input id="address" type="text" placeholder="123 Main St, City (optional)" value={address} onChange={(e) => setAddress(e.target.value)} />
+                  <input id="address" type="text" placeholder="123 Business St, City (optional)" value={address} onChange={(e) => setAddress(e.target.value)} />
                 </div>
               </div>
               <div className="form-row">
@@ -243,24 +360,26 @@ export default function Register() {
                   </select>
                 </div>
               </div>
-              <div className="form-group">
-                <label>ID Document</label>
-                <div className="file-upload">
-                  <label>
-                    <FaUpload />
-                    <span>{idFile ? idFile.name : 'Choose file...'}</span>
-                    <input type="file" onChange={handleFileChange(setIdFile)} accept=".pdf,.jpg,.jpeg,.png" />
-                  </label>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>ID Document</label>
+                  <div className="file-upload">
+                    <label>
+                      <FaUpload />
+                      <span>{idFile ? idFile.name : 'Choose file...'}</span>
+                      <input type="file" onChange={handleFileChange(setIdFile)} accept=".pdf,.jpg,.jpeg,.png" />
+                    </label>
+                  </div>
                 </div>
-              </div>
-              <div className="form-group">
-                <label>Profile Picture</label>
-                <div className="file-upload">
-                  <label>
-                    <FaUpload />
-                    <span>{profilePic ? profilePic.name : 'Choose file...'}</span>
-                    <input type="file" onChange={handleFileChange(setProfilePic)} accept=".jpg,.jpeg,.png" />
-                  </label>
+                <div className="form-group">
+                  <label>Profile Picture</label>
+                  <div className="file-upload">
+                    <label>
+                      <FaUpload />
+                      <span>{profilePic ? profilePic.name : 'Choose file...'}</span>
+                      <input type="file" onChange={handleFileChange(setProfilePic)} accept=".jpg,.jpeg,.png" />
+                    </label>
+                  </div>
                 </div>
               </div>
             </>
@@ -268,16 +387,17 @@ export default function Register() {
 
           {/* --- Password and Submission --- */}
           <div className="form-row">
-            <div className="form-group">
+            <div className="form-group required">
               <label htmlFor="password">Password</label>
               <input id="password" type="password" placeholder="********" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
-            <div className="form-group">
+            <div className="form-group required">
               <label htmlFor="confirmPassword">Confirm Password</label>
               <input id="confirmPassword" type="password" placeholder="********" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
             </div>
           </div>
-          <div className="form-group checkbox-group">
+          
+          <div className="form-group checkbox-group required">
             <input id="terms-accepted" type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} required />
             <label htmlFor="terms-accepted">I accept the <a href="#">terms and conditions</a></label>
           </div>
@@ -301,47 +421,265 @@ export default function Register() {
       </div>
 
       <style jsx>{`
-        .register-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
-        .register-card { width: 100%; max-width: 600px; padding: 2.5rem; background: white; border-radius: 1.25rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); }
-        .form-header { text-align: center; margin-bottom: 2rem; }
-        .form-header h2 { font-size: 1.75rem; font-weight: 700; color: #2d3748; margin-bottom: 1.5rem; }
-        .form-type-toggle { display: flex; background: #edf2f7; border-radius: 0.5rem; padding: 0.25rem; margin: 0 auto; max-width: 300px; }
-        .toggle-btn { flex: 1; padding: 0.5rem 1rem; border: none; background: transparent; cursor: pointer; font-weight: 500; color: #4a5568; border-radius: 0.375rem; transition: all 0.3s ease; }
-        .toggle-btn.active { background: #4299e1; color: white; box-shadow: 0 2px 5px rgba(66, 153, 225, 0.3); }
-        form { display: flex; flex-direction: column; gap: 1.25rem; }
-        .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
-        .form-row { display: flex; gap: 1rem; }
-        .form-row .form-group { flex: 1; }
-        label { font-size: 0.875rem; font-weight: 500; color: #4a5568; }
-        input, select, .date-picker { width: 100%; padding: 0.75rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.875rem; color: #2d3748; background-color: #f8fafc; transition: all 0.3s ease; box-sizing: border-box; }
-        input:focus, select:focus { outline: none; border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2); background-color: white; }
-        .select-wrapper, .input-with-icon { position: relative; }
-        .select-wrapper svg, .input-with-icon svg { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #a0aec0; pointer-events: none; }
-        .select-wrapper select { padding-left: 2.5rem; appearance: none; }
-        .input-with-icon input { padding-left: 2.5rem; }
-        .file-upload label { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; background-color: #f8fafc; border: 1px dashed #cbd5e0; border-radius: 0.5rem; cursor: pointer; }
-        .file-upload input { display: none; }
-        .checkbox-group { flex-direction: row; align-items: center; gap: 0.75rem; }
-        .checkbox-group input { width: auto; }
-        .checkbox-group a { color: #4299e1; text-decoration: none; }
-        .error-message, .success-message { padding: 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; }
-        .error-message { background-color: #fff5f5; border: 1px solid #fed7d7; color: #e53e3e; }
-        .success-message { background-color: #f0fff4; border: 1px solid #c6f6d5; color: #38a169; }
-        .submit-btn { padding: 0.875rem; background-color: #4299e1; color: white; border: none; border-radius: 0.5rem; font-weight: 500; cursor: pointer; }
-        .divider { display: flex; align-items: center; margin: 1.5rem 0; color: #a0aec0; }
-        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #e2e8f0; }
-        .divider span { padding: 0 1rem; }
-        .social-buttons { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
-        .social-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; background-color: white; cursor: pointer; }
-        .login-link { text-align: center; }
-        .login-link button { background: none; border: none; color: #4299e1; cursor: pointer; }
-        @media (max-width: 640px) {
-          .register-container { padding: 1rem; }
-          .register-card { padding: 1.5rem; }
-          .form-row, .social-buttons { flex-direction: column; gap: 1rem;}
+        .register-container { 
+          display: flex; 
+          align-items: center; 
+          justify-content: center; 
+          min-height: 100vh; 
+          padding: 2rem; 
+          background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
+          width: 100%;
+        }
+        .register-card { 
+          width: 80%; 
+          max-width: 800px; 
+          padding: 2.5rem 3rem; 
+          background: white; 
+          border-radius: 1.25rem; 
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); 
+          margin: 2rem auto;
+        }
+        .form-header { 
+          text-align: center; 
+          margin-bottom: 2.5rem; 
+        }
+        .form-header h2 { 
+          font-size: 2rem; 
+          font-weight: 700; 
+          color: #1a202c; 
+          margin-bottom: 1.5rem; 
+        }
+        .form-type-toggle { 
+          display: flex; 
+          background: #f7fafc; 
+          border-radius: 0.75rem; 
+          padding: 0.25rem; 
+          width: fit-content; 
+          margin: 0 auto; 
+        }
+        .toggle-btn { 
+          padding: 0.75rem 2rem; 
+          border: none; 
+          background: transparent; 
+          border-radius: 0.5rem; 
+          font-weight: 600; 
+          cursor: pointer; 
+          transition: all 0.3s ease; 
+        }
+        .toggle-btn.active { 
+          background: white; 
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+          color: #3182ce; 
+        }
+        form { 
+          margin-bottom: 2rem; 
+        }
+        .form-row { 
+          display: flex; 
+          gap: 1.5rem; 
+          margin-bottom: 1.5rem; 
+        }
+        .form-group { 
+          flex: 1; 
+          display: flex; 
+          flex-direction: column; 
+        }
+        .form-group.required label::after { 
+          content: " *"; 
+          color: #e53e3e; 
+        }
+        label { 
+          font-weight: 600; 
+          color: #2d3748; 
+          margin-bottom: 0.5rem; 
+          font-size: 0.9rem; 
+        }
+        input, select { 
+          padding: 0.875rem 1rem; 
+          border: 2px solid #e2e8f0; 
+          border-radius: 0.75rem; 
+          font-size: 1rem; 
+          transition: all 0.3s ease; 
+          background: white;
+        }
+        input:focus, select:focus { 
+          outline: none; 
+          border-color: #3182ce; 
+          box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1); 
+        }
+        .input-with-icon, .select-wrapper { 
+          position: relative; 
+        }
+        .input-with-icon svg, .select-wrapper svg { 
+          position: absolute; 
+          left: 1rem; 
+          top: 50%; 
+          transform: translateY(-50%); 
+          color: #a0aec0; 
+          z-index: 1;
+        }
+        .input-with-icon input { 
+          padding-left: 2.75rem; 
+        }
+        .select-wrapper select { 
+          padding-left: 2.75rem; 
+          width: 100%; 
+          appearance: none; 
+        }
+        .file-upload { 
+          position: relative; 
+        }
+        .file-upload label { 
+          display: flex; 
+          align-items: center; 
+          gap: 0.75rem; 
+          padding: 0.875rem 1rem; 
+          border: 2px dashed #e2e8f0; 
+          border-radius: 0.75rem; 
+          cursor: pointer; 
+          transition: all 0.3s ease; 
+          background: #fafafa;
+        }
+        .file-upload label:hover { 
+          border-color: #3182ce; 
+        }
+        .file-upload input { 
+          position: absolute; 
+          opacity: 0; 
+          width: 100%; 
+          height: 100%; 
+          cursor: pointer; 
+        }
+        .checkbox-group { 
+          flex-direction: row; 
+          align-items: center; 
+          gap: 0.75rem; 
+          margin: 1.5rem 0; 
+        }
+        .checkbox-group input { 
+          width: auto; 
+        }
+        .checkbox-group label { 
+          margin-bottom: 0; 
+        }
+        .checkbox-group a { 
+          color: #3182ce; 
+          text-decoration: none; 
+        }
+        .checkbox-group a:hover { 
+          text-decoration: underline; 
+        }
+        .submit-btn { 
+          width: 100%; 
+          padding: 1rem; 
+          background: #3182ce; 
+          color: white; 
+          border: none; 
+          border-radius: 0.75rem; 
+          font-size: 1.1rem; 
+          font-weight: 600; 
+          cursor: pointer; 
+          transition: all 0.3s ease; 
+        }
+        .submit-btn:hover { 
+          background: #2c5aa0; 
+          transform: translateY(-2px); 
+        }
+        .error-message { 
+          background: #fed7d7; 
+          color: #c53030; 
+          padding: 1rem; 
+          border-radius: 0.75rem; 
+          margin: 1rem 0; 
+          text-align: center; 
+        }
+        .success-message { 
+          background: #c6f6d5; 
+          color: #276749; 
+          padding: 1rem; 
+          border-radius: 0.75rem; 
+          margin: 1rem 0; 
+          text-align: center; 
+        }
+        .divider { 
+          display: flex; 
+          align-items: center; 
+          text-align: center; 
+          margin: 2rem 0; 
+          color: #a0aec0; 
+        }
+        .divider::before, .divider::after { 
+          content: ''; 
+          flex: 1; 
+          border-bottom: 1px solid #e2e8f0; 
+        }
+        .divider span { 
+          padding: 0 1rem; 
+        }
+        .social-buttons { 
+          display: flex; 
+          gap: 1rem; 
+          margin-bottom: 2rem; 
+        }
+        .social-btn { 
+          flex: 1; 
+          display: flex; 
+          align-items: center; 
+          justify-content: center; 
+          gap: 0.75rem; 
+          padding: 0.875rem; 
+          border: 2px solid #e2e8f0; 
+          border-radius: 0.75rem; 
+          background: white; 
+          cursor: pointer; 
+          transition: all 0.3s ease; 
+          font-weight: 600; 
+        }
+        .social-btn:hover { 
+          border-color: #3182ce; 
+          transform: translateY(-2px); 
+        }
+        .login-link { 
+          text-align: center; 
+          color: #4a5568; 
+        }
+        .login-link button { 
+          background: none; 
+          border: none; 
+          color: #3182ce; 
+          cursor: pointer; 
+          font-weight: 600; 
+        }
+        .login-link button:hover { 
+          text-decoration: underline; 
+        }
+
+        /* --- Mobile Responsive --- */
+        @media (max-width: 768px) {
+          .register-container { 
+            padding: 1rem; 
+          }
+          .register-card { 
+            width: 95%; 
+            padding: 1.5rem; 
+            margin: 1rem auto;
+          }
+          .form-row { 
+            flex-direction: column; 
+            gap: 1rem; 
+          }
+          .social-buttons { 
+            flex-direction: column; 
+          }
+          .form-type-toggle { 
+            flex-direction: column; 
+            width: 100%; 
+          }
+          .toggle-btn { 
+            width: 100%; 
+          }
         }
       `}</style>
     </div>
   );
 }
-
