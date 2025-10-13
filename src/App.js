@@ -14,7 +14,8 @@ import Services from './services';
 import Vehicle from './Vehicle';
 import Profile from './Profile';
 import Bidding from './Bidding';
-
+import UserProfile from './UserProfile';
+import DealerProfile from './DealerProfile';
 
 
 
@@ -36,6 +37,8 @@ function App() {
         <Route path='/Vehicle' element={<Vehicle/>}/>
         <Route path="/profile" element={<Profile />} />
         <Route path='/Bidding' element={<Bidding/>}/>
+        <Route path='/UserProfile' element={<UserProfile/>}/>
+        <Route path='/DealerProfile' element={<DealerProfile/>}/>
       </Routes>
     </BrowserRouter>
   );

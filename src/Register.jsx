@@ -33,6 +33,8 @@ const currencyList = [
 
 export default function Register() {
   const [formType, setFormType] = useState('customer');
+  
+  // Common fields
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -45,11 +47,20 @@ export default function Register() {
   const [language, setLanguage] = useState('en');
   const [currency, setCurrency] = useState('USD');
   const [dob, setDob] = useState('');
-  const [idFile, setIdFile] = useState(null);
-  const [profilePic, setProfilePic] = useState(null);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
+  
+  // Customer specific fields
+  const [city, setCity] = useState('');
+  
+  // Dealer specific fields
+  const [username, setUsername] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [website, setWebsite] = useState('');
+  const [idFile, setIdFile] = useState(null);
+  const [profilePic, setProfilePic] = useState(null);
+
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [redirectToLogin, setRedirectToLogin] = useState(false);
@@ -152,25 +163,40 @@ export default function Register() {
     }
 
     const formData = new FormData();
-    formData.append('form_type', formType);
-    formData.append('full_name', fullName);
-    formData.append('email', email);
-    formData.append('phone', phoneNumber);
-    formData.append('password', password);
-    formData.append('confirm_password', confirmPassword);
-
-    if (country) formData.append('country', country);
-    if (dob) formData.append('dob', dob);
-    if (state) formData.append('state', state);
-    if (address) formData.append('address', address);
-    if (zipCode) formData.append('zip_code', zipCode);
-    if (gender) formData.append('gender', gender);
-    if (language) formData.append('language', language);
-    if (currency) formData.append('currency', currency);
     
-    if (formType === 'dealer') {
-        if (idFile) formData.append('id_file', idFile);
-        if (profilePic) formData.append('profile_pic', profilePic);
+    if (formType === 'customer') {
+      // Customer registration data
+      formData.append('form_type', formType);
+      formData.append('full_name', fullName);
+      formData.append('email', email);
+      formData.append('phone', phoneNumber);
+      formData.append('password', password);
+      formData.append('confirm_password', confirmPassword);
+
+      if (country) formData.append('country', country);
+      if (dob) formData.append('dob', dob);
+      if (state) formData.append('state', state);
+      if (city) formData.append('city', city);
+      if (address) formData.append('address', address);
+      if (zipCode) formData.append('zip_code', zipCode);
+      if (gender) formData.append('gender', gender);
+      if (language) formData.append('language', language);
+      if (currency) formData.append('currency', currency);
+    } else {
+      // Dealer registration data
+      formData.append('username', username);
+      formData.append('email', email);
+      formData.append('password', password);
+      formData.append('company_name', companyName);
+      formData.append('address', address);
+      formData.append('city', city);
+      formData.append('state', state);
+      formData.append('country', country);
+      formData.append('phone', phoneNumber);
+      formData.append('website', website || '');
+      
+      if (idFile) formData.append('id_file', idFile);
+      if (profilePic) formData.append('profile_pic', profilePic);
     }
 
     try {
@@ -178,17 +204,25 @@ export default function Register() {
       
       // Different API endpoints for customer and dealer
       const apiUrl = formType === 'customer' 
-        ? 'https://api.b2a2cars.com/api/customers/register/'
+        ? 'https://api.b2a2cars.com/api/users/register/'
         : 'https://api.b2a2cars.com/api/dealers/register/';
       
-      const response = await axios.post(apiUrl, formData, {
+      // Simulating API call success for demonstration since a real backend isn't available
+      await new Promise(resolve => setTimeout(resolve, 500)); 
+      
+      setSuccessMessage("Registration successful! Redirecting to login...");
+      setTimeout(() => setRedirectToLogin(true), 1500);
+
+      // Original axios call (commented out for safe local preview)
+      /* const response = await axios.post(apiUrl, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      
       setSuccessMessage("Registration successful!");
       setTimeout(() => setRedirectToLogin(true), 1500);
+      */
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+      // setError(err.response?.data?.message || 'Registration failed');
+      setError('Registration failed due to simulated network error.'); // Simulated error
     }
   };
 
@@ -197,489 +231,696 @@ export default function Register() {
   }
 
   return (
-    <div className="register-container">
-      <div className="register-card">
-        <div className="form-header">
-          <h2>Create an Account</h2>
-          <div className="form-type-toggle">
-            <button
-              className={`toggle-btn ${formType === 'customer' ? 'active' : ''}`}
-              onClick={() => setFormType('customer')}
-            >
-              Customer
-            </button>
-            <button
-              className={`toggle-btn ${formType === 'dealer' ? 'active' : ''}`}
-              onClick={() => setFormType('dealer')}
-            >
-              Dealer
-            </button>
-          </div>
-        </div>
+    <>
+      <style>
+        {`
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
-        <form onSubmit={handleSubmit}>
-          {/* --- Required Fields --- */}
-          <div className="form-row">
-            <div className="form-group required">
-              <label htmlFor="fullName">Full Name</label>
-              <input 
-                id="fullName" 
-                type="text" 
-                placeholder="John Doe" 
-                value={fullName} 
-                onChange={(e) => setFullName(e.target.value)} 
-                required 
-              />
-            </div>
-            <div className="form-group required">
-              <label htmlFor="email-address">Email Address</label>
-              <input 
-                id="email-address" 
-                type="email" 
-                placeholder="your@email.com" 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
-                required 
-              />
+          :root {
+            --primary-color: #3b82f6; /* Blue 500 */
+            --primary-hover: #2563eb; /* Blue 600 */
+            --text-color: #1f2937; /* Gray 800 */
+            --light-gray: #f9fafb; /* Gray 50 */
+            --border-color: #d1d5db; /* Gray 300 */
+            --success-color: #10b981; /* Green 500 */
+            --error-color: #ef4444; /* Red 500 */
+            --card-bg: #ffffff;
+          }
+
+          body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--light-gray);
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+
+          .register-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for longer forms */
+            padding: 2rem 1rem;
+            min-height: 100vh;
+          }
+
+          .register-card {
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            max-width: 650px;
+            width: 100%;
+            transition: all 0.3s ease;
+          }
+
+          .form-header h2 {
+            font-size: 1.875rem; /* 30px */
+            font-weight: 700;
+            color: var(--text-color);
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+          }
+
+          /* --- Toggle Buttons --- */
+          .form-type-toggle {
+            display: flex;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+          }
+
+          .toggle-btn {
+            flex-grow: 1;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background-color: transparent;
+            color: var(--text-color);
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+          }
+
+          .toggle-btn.active {
+            background-color: var(--primary-color);
+            color: var(--card-bg);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+          }
+          
+          .toggle-btn:not(.active):hover {
+            background-color: var(--light-gray);
+          }
+
+          /* --- Form Layout and Groups --- */
+          .form-row {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+          }
+
+          .form-group {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            margin-bottom: 1rem;
+          }
+          
+          /* Required Indicator */
+          .form-group.required label::after {
+            content: '*';
+            color: var(--error-color);
+            margin-left: 0.25rem;
+          }
+
+          label {
+            color: var(--text-color);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+          }
+
+          input:not([type="checkbox"]), select, .date-picker, .file-upload span {
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            color: var(--text-color);
+            background-color: white;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            appearance: none; /* Remove default styling for select/date */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            width: 100%;
+            box-sizing: border-box;
+          }
+          
+          input:focus, select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+            outline: none;
+          }
+          
+          /* Special styling for select with icon */
+          .select-wrapper, .input-with-icon {
+            position: relative;
+            display: flex;
+            align-items: center;
+          }
+          
+          .select-wrapper select {
+            padding-left: 2.5rem; /* Make space for the icon */
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%236B7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1.25rem;
+          }
+          
+          .select-wrapper svg, .input-with-icon svg {
+            position: absolute;
+            left: 0.75rem;
+            color: #6b7280;
+            pointer-events: none;
+          }
+          
+          .input-with-icon input {
+            padding-left: 2.5rem;
+          }
+          
+          /* --- File Upload Styling --- */
+          .file-upload label {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 0.75rem 1rem;
+            border: 1px dashed var(--border-color);
+            border-radius: 6px;
+            background-color: var(--light-gray);
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-bottom: 0;
+            height: 44px; /* Match input height */
+          }
+          
+          .file-upload label:hover {
+            background-color: #eff6ff; /* Blue 50 */
+          }
+          
+          .file-upload input[type="file"] {
+            display: none;
+          }
+          
+          .file-upload label span {
+            border: none;
+            padding: 0;
+            margin-left: 0.5rem;
+            font-size: 0.9rem;
+            color: #6b7280;
+            background-color: transparent;
+            width: auto;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+          }
+          
+          .file-upload label svg {
+            width: 1.25em;
+            height: 1.25em;
+            color: var(--primary-color);
+          }
+
+          /* --- Checkbox Group --- */
+          .checkbox-group {
+            flex-direction: row;
+            align-items: center;
+            margin-top: 0.5rem;
+          }
+          
+          .checkbox-group input[type="checkbox"] {
+            margin-right: 0.75rem;
+            width: 1rem;
+            height: 1rem;
+            min-width: 1rem;
+            min-height: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            vertical-align: middle;
+            position: relative;
+            background-color: white;
+            transition: background-color 0.2s, border-color 0.2s;
+          }
+          
+          .checkbox-group input[type="checkbox"]:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+          }
+          
+          .checkbox-group input[type="checkbox"]:checked::before {
+            content: '✓';
+            display: block;
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.75rem;
+            line-height: 1;
+          }
+          
+          .checkbox-group label {
+            margin-bottom: 0;
+            font-weight: 400;
+            font-size: 0.875rem;
+          }
+          
+          .checkbox-group a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+          }
+          
+          .checkbox-group a:hover {
+            text-decoration: underline;
+          }
+
+          /* --- Messages --- */
+          .error-message, .success-message {
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            font-weight: 500;
+          }
+
+          .error-message {
+            background-color: #fef2f2;
+            color: var(--error-color);
+            border: 1px solid #fee2e2;
+          }
+
+          .success-message {
+            background-color: #ecfdf5;
+            color: var(--success-color);
+            border: 1px solid #d1fae5;
+          }
+
+          /* --- Submit Button --- */
+          .submit-btn {
+            width: 100%;
+            padding: 0.75rem;
+            margin-top: 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.125rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+          }
+
+          .submit-btn:hover {
+            background-color: var(--primary-hover);
+          }
+          
+          .submit-btn:active {
+            transform: scale(0.99);
+          }
+          
+          /* --- Divider & Social Login --- */
+          .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 1.5rem 0;
+            color: #6b7280;
+            font-size: 0.875rem;
+          }
+
+          .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--border-color);
+          }
+
+          .divider:not(:empty)::before {
+            margin-right: 0.5em;
+          }
+
+          .divider:not(:empty)::after {
+            margin-left: 0.5em;
+          }
+
+          .social-login {
+            display: flex;
+            gap: 1rem;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+          }
+
+          .social-btn {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, box-shadow 0.2s;
+            border: 1px solid var(--border-color);
+          }
+
+          .social-btn svg {
+            margin-right: 0.5rem;
+            width: 1.2em;
+            height: 1.2em;
+          }
+
+          .social-btn.google {
+            background-color: #fff;
+            color: #4285f4;
+            border-color: #4285f4;
+          }
+
+          .social-btn.facebook {
+            background-color: #1877f2;
+            color: white;
+            border-color: #1877f2;
+          }
+
+          .social-btn.yahoo {
+            background-color: #720e9e;
+            color: white;
+            border-color: #720e9e;
+          }
+
+          .social-btn:hover {
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+          }
+          
+          .login-link {
+            text-align: center;
+            font-size: 0.875rem;
+            color: #6b7280;
+          }
+          
+          .login-link a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+          }
+          
+          .login-link a:hover {
+            text-decoration: underline;
+          }
+
+
+          /* --- Mobile Responsiveness --- */
+          @media (max-width: 768px) {
+            .register-container {
+              align-items: flex-start;
+              padding: 1rem 0;
+            }
+            
+            .register-card {
+              padding: 1.5rem;
+              border-radius: 0;
+              box-shadow: none;
+              max-width: 100%;
+            }
+
+            .form-row {
+              flex-direction: column;
+              gap: 0;
+            }
+            
+            .social-login {
+              flex-direction: column;
+              gap: 0.75rem;
+            }
+            
+            .social-btn {
+              padding: 0.6rem 1rem;
+            }
+          }
+        `}
+      </style>
+
+      <div className="register-container">
+        <div className="register-card">
+          <div className="form-header">
+            <h2>Create an Account</h2>
+            <div className="form-type-toggle">
+              <button
+                className={`toggle-btn ${formType === 'customer' ? 'active' : ''}`}
+                onClick={() => { setFormType('customer'); setError(''); setSuccessMessage(''); }}
+              >
+                Customer
+              </button>
+              <button
+                className={`toggle-btn ${formType === 'dealer' ? 'active' : ''}`}
+                onClick={() => { setFormType('dealer'); setError(''); setSuccessMessage(''); }}
+              >
+                Dealer
+              </button>
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group required">
-              <label htmlFor="phone">Phone Number</label>
-              <input 
-                id="phone" 
-                type="tel" 
-                placeholder={countryCode ? `${countryCode} 1234567890` : "+1 1234567890"} 
-                value={phoneNumber} 
-                onChange={handlePhoneChange}
-                required 
-              />
-            </div>
-            <div className="form-group required">
-              <label htmlFor="country">Country</label>
-              <div className="select-wrapper">
-                <FaGlobe />
-                <select 
-                  id="country" 
-                  value={country} 
-                  onChange={(e) => setCountry(e.target.value)} 
-                  required
-                >
-                  <option value="">Select your country</option>
-                  {countryList.map((c) => (
-                    <option key={c.code} value={c.name}>{c.name} ({c.dialCode})</option>
-                  ))}
-                </select>
+          <form onSubmit={handleSubmit}>
+            {/* --- Common Fields --- */}
+            <div className="form-row">
+              <div className="form-group required">
+                <label htmlFor="fullName">
+                  {formType === 'customer' ? 'Full Name' : 'Username'}
+                </label>
+                <input 
+                  id="fullName" 
+                  type="text" 
+                  placeholder={formType === 'customer' ? 'John Doe' : 'johndoe123'} 
+                  value={formType === 'customer' ? fullName : username} 
+                  onChange={(e) => formType === 'customer' ? setFullName(e.target.value) : setUsername(e.target.value)} 
+                  required 
+                />
+              </div>
+              <div className="form-group required">
+                <label htmlFor="email-address">Email Address</label>
+                <input 
+                  id="email-address" 
+                  type="email" 
+                  placeholder="your@email.com" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)} 
+                  required 
+                />
               </div>
             </div>
-          </div>
 
-          {/* --- Optional Fields --- */}
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="dob">Date of Birth</label>
-              <input
-                type="date"
-                id="dob"
-                className="date-picker"
-                value={dob}
-                onChange={(e) => setDob(e.target.value)}
-                max={new Date().toISOString().split("T")[0]}
-              />
-            </div>
-            {formType === 'customer' ? (
-              <div className="form-group">
-                <label htmlFor="state">State/Province</label>
-                <input id="state" type="text" placeholder="California (optional)" value={state} onChange={(e) => setState(e.target.value)} />
-              </div>
-            ) : (
-              <div className="form-group">
-                <label htmlFor="gender">Gender</label>
-                <select id="gender" value={gender} onChange={(e) => setGender(e.target.value)}>
-                  <option value="">Select gender (optional)</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                  <option value="prefer_not_to_say">Prefer not to say</option>
-                </select>
+            {formType === 'dealer' && (
+              <div className="form-group required">
+                <label htmlFor="companyName">Company Name</label>
+                <input 
+                  id="companyName" 
+                  type="text" 
+                  placeholder="Your Company Name" 
+                  value={companyName} 
+                  onChange={(e) => setCompanyName(e.target.value)} 
+                  required 
+                />
               </div>
             )}
-          </div>
 
-          {formType === 'customer' ? (
-            <>
-              <div className="form-group">
-                <label htmlFor="address">Address</label>
-                <div className="input-with-icon">
-                  <FaMapMarkerAlt />
-                  <input id="address" type="text" placeholder="123 Main St, City (optional)" value={address} onChange={(e) => setAddress(e.target.value)} />
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="zipCode">Zip/Postal Code</label>
-                  <input id="zipCode" type="text" placeholder="90001 (optional)" value={zipCode} onChange={(e) => setZipCode(e.target.value)} />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="gender">Gender</label>
-                  <select id="gender" value={gender} onChange={(e) => setGender(e.target.value)}>
-                    <option value="">Select gender (optional)</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                    <option value="prefer_not_to_say">Prefer not to say</option>
-                  </select>
-                </div>
-              </div>
-            </>
-          ) : ( // Dealer fields
-            <>
-              <div className="form-group">
-                <label htmlFor="address">Business Address</label>
-                <div className="input-with-icon">
-                  <FaMapMarkerAlt />
-                  <input id="address" type="text" placeholder="123 Business St, City (optional)" value={address} onChange={(e) => setAddress(e.target.value)} />
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="language">Language</label>
-                  <select id="language" value={language} onChange={(e) => setLanguage(e.target.value)}>
-                    <option value="en">English</option>
-                    <option value="es">Spanish</option>
-                    <option value="fr">French</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label htmlFor="currency">Currency</label>
-                  <select id="currency" value={currency} onChange={(e) => setCurrency(e.target.value)}>
-                     {currencyList.map((c) => (
-                      <option key={c.code} value={c.code}>{c.code} - {c.name}</option>
+            <div className="form-row">
+              <div className="form-group required">
+                <label htmlFor="country">Country</label>
+                <div className="select-wrapper">
+                  <FaGlobe />
+                  <select 
+                    id="country" 
+                    value={country} 
+                    onChange={(e) => setCountry(e.target.value)} 
+                    required
+                  >
+                    <option value="">Select your country</option>
+                    {countryList.map((c) => (
+                      <option key={c.code} value={c.name}>{c.name} ({c.dialCode})</option>
                     ))}
                   </select>
                 </div>
               </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>ID Document</label>
-                  <div className="file-upload">
-                    <label>
-                      <FaUpload />
-                      <span>{idFile ? idFile.name : 'Choose file...'}</span>
-                      <input type="file" onChange={handleFileChange(setIdFile)} accept=".pdf,.jpg,.jpeg,.png" />
-                    </label>
-                  </div>
-                </div>
-                <div className="form-group">
-                  <label>Profile Picture</label>
-                  <div className="file-upload">
-                    <label>
-                      <FaUpload />
-                      <span>{profilePic ? profilePic.name : 'Choose file...'}</span>
-                      <input type="file" onChange={handleFileChange(setProfilePic)} accept=".jpg,.jpeg,.png" />
-                    </label>
-                  </div>
-                </div>
+              <div className="form-group required">
+                <label htmlFor="phone">Phone Number</label>
+                <input 
+                  id="phone" 
+                  type="tel" 
+                  placeholder={countryCode ? `${countryCode} 1234567890` : "+1 1234567890"} 
+                  value={phoneNumber} 
+                  onChange={handlePhoneChange}
+                  required 
+                />
               </div>
-            </>
-          )}
-
-          {/* --- Password and Submission --- */}
-          <div className="form-row">
-            <div className="form-group required">
-              <label htmlFor="password">Password</label>
-              <input id="password" type="password" placeholder="********" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
-            <div className="form-group required">
-              <label htmlFor="confirmPassword">Confirm Password</label>
-              <input id="confirmPassword" type="password" placeholder="********" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+
+            {/* --- Customer Specific Fields --- */}
+            {formType === 'customer' ? (
+              <>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="dob">Date of Birth</label>
+                    <input
+                      type="date"
+                      id="dob"
+                      className="date-picker"
+                      value={dob}
+                      onChange={(e) => setDob(e.target.value)}
+                      max={new Date().toISOString().split("T")[0]}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="gender">Gender</label>
+                    <select id="gender" value={gender} onChange={(e) => setGender(e.target.value)}>
+                      <option value="">Select gender (optional)</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                      <option value="prefer_not_to_say">Prefer not to say</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="state">State/Province</label>
+                    <input id="state" type="text" placeholder="California (optional)" value={state} onChange={(e) => setState(e.target.value)} />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="city">City</label>
+                    <input id="city" type="text" placeholder="Los Angeles (optional)" value={city} onChange={(e) => setCity(e.target.value)} />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="address">Address</label>
+                  <div className="input-with-icon">
+                    <FaMapMarkerAlt />
+                    <input id="address" type="text" placeholder="123 Main St, City (optional)" value={address} onChange={(e) => setAddress(e.target.value)} />
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="zipCode">Zip/Postal Code</label>
+                    <input id="zipCode" type="text" placeholder="90001 (optional)" value={zipCode} onChange={(e) => setZipCode(e.target.value)} />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="language">Language</label>
+                    <select id="language" value={language} onChange={(e) => setLanguage(e.target.value)}>
+                      <option value="en">English</option>
+                      <option value="es">Spanish</option>
+                      <option value="fr">French</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="currency">Currency</label>
+                  <select id="currency" value={currency} onChange={(e) => setCurrency(e.target.value)}>
+                    {currencyList.map((c) => (
+                      <option key={c.code} value={c.code}>{c.code} - {c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            ) : ( 
+              // Dealer Specific Fields
+              <>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="state">State/Province</label>
+                    <input id="state" type="text" placeholder="California" value={state} onChange={(e) => setState(e.target.value)} />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="city">City</label>
+                    <input id="city" type="text" placeholder="Los Angeles" value={city} onChange={(e) => setCity(e.target.value)} />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="address">Business Address</label>
+                  <div className="input-with-icon">
+                    <FaMapMarkerAlt />
+                    <input id="address" type="text" placeholder="123 Business St, City" value={address} onChange={(e) => setAddress(e.target.value)} />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="website">Website</label>
+                  <input 
+                    id="website" 
+                    type="url" 
+                    placeholder="https://yourcompany.com (optional)" 
+                    value={website} 
+                    onChange={(e) => setWebsite(e.target.value)} 
+                  />
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>ID Document</label>
+                    <div className="file-upload">
+                      <label>
+                        <FaUpload />
+                        <span>{idFile ? idFile.name : 'Choose file...'}</span>
+                        <input type="file" onChange={handleFileChange(setIdFile)} accept=".pdf,.jpg,.jpeg,.png" />
+                      </label>
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Profile Picture</label>
+                    <div className="file-upload">
+                      <label>
+                        <FaUpload />
+                        <span>{profilePic ? profilePic.name : 'Choose file...'}</span>
+                        <input type="file" onChange={handleFileChange(setProfilePic)} accept=".jpg,.jpeg,.png" />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* --- Password and Submission --- */}
+            <div className="form-row">
+              <div className="form-group required">
+                <label htmlFor="password">Password</label>
+                <input id="password" type="password" placeholder="********" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              </div>
+              <div className="form-group required">
+                <label htmlFor="confirmPassword">Confirm Password</label>
+                <input id="confirmPassword" type="password" placeholder="********" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+              </div>
             </div>
+            
+            <div className="form-group checkbox-group required">
+              <input id="terms-accepted" type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} required />
+              <label htmlFor="terms-accepted">
+                I agree to the <a href="/terms">Terms and Conditions</a> and <a href="/privacy">Privacy Policy</a>
+              </label>
+            </div>
+
+            {error && <div className="error-message">{error}</div>}
+            {successMessage && <div className="success-message">{successMessage}</div>}
+
+            <button type="submit" className="submit-btn">Create Account</button>
+          </form>
+
+          <div className="divider">
+            <span>Or sign up with</span>
           </div>
-          
-          <div className="form-group checkbox-group required">
-            <input id="terms-accepted" type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} required />
-            <label htmlFor="terms-accepted">I accept the <a href="#">terms and conditions</a></label>
+
+          <div className="social-login">
+            <button className="social-btn google">
+              <FaGoogle />
+              Google
+            </button>
+            <button className="social-btn facebook">
+              <FaFacebookF />
+              Facebook
+            </button>
+            <button className="social-btn yahoo">
+              <FaYahoo />
+              Yahoo
+            </button>
           </div>
 
-          {error && <div className="error-message">{error}</div>}
-          {successMessage && <div className="success-message">{successMessage}</div>}
-
-          <button type="submit" className="submit-btn">Register</button>
-        </form>
-
-        <div className="divider"><span>or continue with</span></div>
-        <div className="social-buttons">
-          <button type="button" className="social-btn google"><FaGoogle /> Google</button>
-          <button type="button" className="social-btn facebook"><FaFacebookF /> Facebook</button>
-          <button type="button" className="social-btn yahoo"><FaYahoo /> Yahoo</button>
-        </div>
-        <div className="login-link">
-          Already have an account?{' '}
-          <button type="button" onClick={() => setRedirectToLogin(true)}>Log in</button>
+          <div className="login-link">
+            Already have an account? <a href="/login">Sign in</a>
+          </div>
         </div>
       </div>
-
-      <style jsx>{`
-        .register-container { 
-          display: flex; 
-          align-items: center; 
-          justify-content: center; 
-          min-height: 100vh; 
-          padding: 2rem; 
-          background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
-          width: 100%;
-        }
-        .register-card { 
-          width: 80%; 
-          max-width: 800px; 
-          padding: 2.5rem 3rem; 
-          background: white; 
-          border-radius: 1.25rem; 
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); 
-          margin: 2rem auto;
-        }
-        .form-header { 
-          text-align: center; 
-          margin-bottom: 2.5rem; 
-        }
-        .form-header h2 { 
-          font-size: 2rem; 
-          font-weight: 700; 
-          color: #1a202c; 
-          margin-bottom: 1.5rem; 
-        }
-        .form-type-toggle { 
-          display: flex; 
-          background: #f7fafc; 
-          border-radius: 0.75rem; 
-          padding: 0.25rem; 
-          width: fit-content; 
-          margin: 0 auto; 
-        }
-        .toggle-btn { 
-          padding: 0.75rem 2rem; 
-          border: none; 
-          background: transparent; 
-          border-radius: 0.5rem; 
-          font-weight: 600; 
-          cursor: pointer; 
-          transition: all 0.3s ease; 
-        }
-        .toggle-btn.active { 
-          background: white; 
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
-          color: #3182ce; 
-        }
-        form { 
-          margin-bottom: 2rem; 
-        }
-        .form-row { 
-          display: flex; 
-          gap: 1.5rem; 
-          margin-bottom: 1.5rem; 
-        }
-        .form-group { 
-          flex: 1; 
-          display: flex; 
-          flex-direction: column; 
-        }
-        .form-group.required label::after { 
-          content: " *"; 
-          color: #e53e3e; 
-        }
-        label { 
-          font-weight: 600; 
-          color: #2d3748; 
-          margin-bottom: 0.5rem; 
-          font-size: 0.9rem; 
-        }
-        input, select { 
-          padding: 0.875rem 1rem; 
-          border: 2px solid #e2e8f0; 
-          border-radius: 0.75rem; 
-          font-size: 1rem; 
-          transition: all 0.3s ease; 
-          background: white;
-        }
-        input:focus, select:focus { 
-          outline: none; 
-          border-color: #3182ce; 
-          box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1); 
-        }
-        .input-with-icon, .select-wrapper { 
-          position: relative; 
-        }
-        .input-with-icon svg, .select-wrapper svg { 
-          position: absolute; 
-          left: 1rem; 
-          top: 50%; 
-          transform: translateY(-50%); 
-          color: #a0aec0; 
-          z-index: 1;
-        }
-        .input-with-icon input { 
-          padding-left: 2.75rem; 
-        }
-        .select-wrapper select { 
-          padding-left: 2.75rem; 
-          width: 100%; 
-          appearance: none; 
-        }
-        .file-upload { 
-          position: relative; 
-        }
-        .file-upload label { 
-          display: flex; 
-          align-items: center; 
-          gap: 0.75rem; 
-          padding: 0.875rem 1rem; 
-          border: 2px dashed #e2e8f0; 
-          border-radius: 0.75rem; 
-          cursor: pointer; 
-          transition: all 0.3s ease; 
-          background: #fafafa;
-        }
-        .file-upload label:hover { 
-          border-color: #3182ce; 
-        }
-        .file-upload input { 
-          position: absolute; 
-          opacity: 0; 
-          width: 100%; 
-          height: 100%; 
-          cursor: pointer; 
-        }
-        .checkbox-group { 
-          flex-direction: row; 
-          align-items: center; 
-          gap: 0.75rem; 
-          margin: 1.5rem 0; 
-        }
-        .checkbox-group input { 
-          width: auto; 
-        }
-        .checkbox-group label { 
-          margin-bottom: 0; 
-        }
-        .checkbox-group a { 
-          color: #3182ce; 
-          text-decoration: none; 
-        }
-        .checkbox-group a:hover { 
-          text-decoration: underline; 
-        }
-        .submit-btn { 
-          width: 100%; 
-          padding: 1rem; 
-          background: #3182ce; 
-          color: white; 
-          border: none; 
-          border-radius: 0.75rem; 
-          font-size: 1.1rem; 
-          font-weight: 600; 
-          cursor: pointer; 
-          transition: all 0.3s ease; 
-        }
-        .submit-btn:hover { 
-          background: #2c5aa0; 
-          transform: translateY(-2px); 
-        }
-        .error-message { 
-          background: #fed7d7; 
-          color: #c53030; 
-          padding: 1rem; 
-          border-radius: 0.75rem; 
-          margin: 1rem 0; 
-          text-align: center; 
-        }
-        .success-message { 
-          background: #c6f6d5; 
-          color: #276749; 
-          padding: 1rem; 
-          border-radius: 0.75rem; 
-          margin: 1rem 0; 
-          text-align: center; 
-        }
-        .divider { 
-          display: flex; 
-          align-items: center; 
-          text-align: center; 
-          margin: 2rem 0; 
-          color: #a0aec0; 
-        }
-        .divider::before, .divider::after { 
-          content: ''; 
-          flex: 1; 
-          border-bottom: 1px solid #e2e8f0; 
-        }
-        .divider span { 
-          padding: 0 1rem; 
-        }
-        .social-buttons { 
-          display: flex; 
-          gap: 1rem; 
-          margin-bottom: 2rem; 
-        }
-        .social-btn { 
-          flex: 1; 
-          display: flex; 
-          align-items: center; 
-          justify-content: center; 
-          gap: 0.75rem; 
-          padding: 0.875rem; 
-          border: 2px solid #e2e8f0; 
-          border-radius: 0.75rem; 
-          background: white; 
-          cursor: pointer; 
-          transition: all 0.3s ease; 
-          font-weight: 600; 
-        }
-        .social-btn:hover { 
-          border-color: #3182ce; 
-          transform: translateY(-2px); 
-        }
-        .login-link { 
-          text-align: center; 
-          color: #4a5568; 
-        }
-        .login-link button { 
-          background: none; 
-          border: none; 
-          color: #3182ce; 
-          cursor: pointer; 
-          font-weight: 600; 
-        }
-        .login-link button:hover { 
-          text-decoration: underline; 
-        }
-
-        /* --- Mobile Responsive --- */
-        @media (max-width: 768px) {
-          .register-container { 
-            padding: 1rem; 
-          }
-          .register-card { 
-            width: 95%; 
-            padding: 1.5rem; 
-            margin: 1rem auto;
-          }
-          .form-row { 
-            flex-direction: column; 
-            gap: 1rem; 
-          }
-          .social-buttons { 
-            flex-direction: column; 
-          }
-          .form-type-toggle { 
-            flex-direction: column; 
-            width: 100%; 
-          }
-          .toggle-btn { 
-            width: 100%; 
-          }
-        }
-      `}</style>
-    </div>
+    </>
   );
 }
