@@ -125,6 +125,11 @@ export default function Login() {
       const { token, ...user } = response.data;
       localStorage.setItem('authToken', token);
       localStorage.setItem('user', JSON.stringify({ ...user, role: userRole }));
+      
+      if (loginType === 'dealer' && user.id){
+        localStorage.setItem('dealerId', user.id);
+      }
+
       setRedirectTo('/dashboard');
     } catch (err) {
       const errorData = err.response?.data;

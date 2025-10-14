@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+// ... SVG Icons remain the same ...
 // --- SVG Icons ---
 const FaUser = () => <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 448 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M224 256c70.7 0 128-57.3 128-128S294.7 0 224 0 96 57.3 96 128s57.3 128 128 128zm89.6 32h-16.7c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16h-16.7C60.2 288 0 348.2 0 422.4V464c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48v-41.6c0-74.2-60.2-134.4-134.4-134.4z"></path></svg>;
 const FaEnvelope = () => <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M502.3 190.8c3.9-3.1 9.7-.2 9.7 4.7V400c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V195.6c0-5 5.7-7.8 9.7-4.7 22.4 17.4 52.1 39.5 154.1 113.6 21.1 15.4 56.7 47.8 92.2 47.6 35.7.3 72-32.8 92.3-47.6 102-74.1 131.6-96.3 154-113.7zM256 320c23.2.4 56.6-29.2 73.4-41.4 132.7-96.3 142.8-104.7 173.4-128.7 5.8-4.5 9.2-11.5 9.2-18.9v-19c0-26.5-21.5-48-48-48H48C21.5 64 0 85.5 0 112v19c0 7.4 3.4 14.3 9.2 18.9 30.6 23.9 40.7 32.4 173.4 128.7 16.8 12.2 50.2 41.8 73.4 41.4z"></path></svg>;
@@ -43,22 +44,23 @@ export default function DealerProfile() {
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
   
-  // Dealer data state
+  // Dealer data state - updated to match API model
   const [dealerData, setDealerData] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
+    company_name: '',
+    address: '',
+    city: '',
+    state: '',
     country: '',
-    businessAddress: '',
-    businessName: '',
+    phone: '',
+    email: '',
+    website: '',
+    // Additional fields for the form
     businessType: '',
     taxId: '',
     yearsInBusiness: '',
-    website: '',
     language: 'en',
     currency: 'USD',
-    dob: '',
-    gender: '',
+    fullName: '', // This might come from user profile
   });
 
   const [originalData, setOriginalData] = useState({});
@@ -81,31 +83,66 @@ export default function DealerProfile() {
   // Animation states
   const [animationClass, setAnimationClass] = useState('');
 
-  // Simulate loading dealer data
+  // API Configuration
+  const API_BASE_URL = 'https://api.b2a2cars.com/api/dealers';
+  const API_ENDPOINTS = {
+    getProfile: (id) => `${API_BASE_URL}/dealer-profiles/${id}`,
+    updateProfile: (id) => `${API_BASE_URL}/dealer-profiles/${id}`,
+  };
+
+  // Get auth token and dealer ID
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('authToken');
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+      'X-CSRFTOKEN': 'F0yGN8NfjlzieXwJc6E93KdZ1fKN1YYPc7u1p5tS0MAsruyjwArbR2FbbbjYmPv6',
+    };
+  };
+
+  // Load dealer data from API
   useEffect(() => {
     const loadDealerData = async () => {
       setIsLoading(true);
-      setTimeout(() => {
-        const mockDealerData = {
-          fullName: 'Michael Rodriguez',
-          email: 'michael@prestigecars.com',
-          phone: '+1 5550123456',
-          country: 'United States',
-          businessAddress: '123 Auto Plaza, Los Angeles, CA',
-          businessName: 'Prestige Luxury Cars',
+      
+      try {
+        const dealerId = localStorage.getItem('dealerId');
+        if (!dealerId) {
+          setError('Dealer ID not found. Please login again.');
+          setIsLoading(false);
+          return;
+        }
+
+        const response = await axios.get(
+          API_ENDPOINTS.getProfile(dealerId),
+          { headers: getAuthHeaders() }
+        );
+
+        const apiData = response.data;
+        
+        // Map API data to our form state
+        const mappedData = {
+          company_name: apiData.company_name || '',
+          address: apiData.address || '',
+          city: apiData.city || '',
+          state: apiData.state || '',
+          country: apiData.country || '',
+          phone: apiData.phone || '',
+          email: apiData.email || '',
+          website: apiData.website || '',
+          // Set default values for additional fields
           businessType: 'luxury',
           taxId: '12-3456789',
           yearsInBusiness: '8',
-          website: 'www.prestigecars.com',
           language: 'en',
           currency: 'USD',
-          dob: '1980-05-15',
-          gender: 'male',
+          fullName: 'Michael Rodriguez', // This would ideally come from user profile
         };
-        setDealerData(mockDealerData);
-        setOriginalData(mockDealerData);
+
+        setDealerData(mappedData);
+        setOriginalData(mappedData);
         
-        // Mock business stats
+        // Mock business stats (you can replace with actual API calls)
         setBusinessStats({
           totalCars: 47,
           activeListings: 23,
@@ -116,7 +153,33 @@ export default function DealerProfile() {
         
         setIsLoading(false);
         setAnimationClass('fade-in-up');
-      }, 1200);
+      } catch (error) {
+        console.error('Error loading dealer profile:', error);
+        setError('Failed to load dealer profile. Please try again.');
+        setIsLoading(false);
+        
+        // Fallback to mock data if API fails
+        const mockDealerData = {
+          company_name: 'Prestige Luxury Cars',
+          address: '123 Auto Plaza, Los Angeles, CA',
+          city: 'Los Angeles',
+          state: 'California',
+          country: 'United States',
+          phone: '+1 5550123456',
+          email: 'michael@prestigecars.com',
+          website: 'www.prestigecars.com',
+          businessType: 'luxury',
+          taxId: '12-3456789',
+          yearsInBusiness: '8',
+          language: 'en',
+          currency: 'USD',
+          fullName: 'Michael Rodriguez',
+        };
+        setDealerData(mockDealerData);
+        setOriginalData(mockDealerData);
+        setIsLoading(false);
+        setAnimationClass('fade-in-up');
+      }
     };
 
     loadDealerData();
@@ -177,15 +240,38 @@ export default function DealerProfile() {
       return;
     }
 
-    if (!dealerData.businessName) {
-      setError('Business name is required');
+    if (!dealerData.company_name) {
+      setError('Company name is required');
       return;
     }
 
     setIsSaving(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const dealerId = localStorage.getItem('dealerId');
+      if (!dealerId) {
+        throw new Error('Dealer ID not found');
+      }
+
+      // Prepare data for API - only send fields that the API expects
+      const apiData = {
+        company_name: dealerData.company_name,
+        address: dealerData.address,
+        city: dealerData.city,
+        state: dealerData.state,
+        country: dealerData.country,
+        phone: dealerData.phone,
+        email: dealerData.email,
+        website: dealerData.website,
+        // Add other fields that your API expects
+      };
+
+      const response = await axios.put(
+        API_ENDPOINTS.updateProfile(dealerId),
+        apiData,
+        { headers: getAuthHeaders() }
+      );
+
       setOriginalData(dealerData);
       setIsEditing(false);
       setIsSaving(false);
@@ -195,7 +281,11 @@ export default function DealerProfile() {
       setTimeout(() => {
         setAnimationClass('');
       }, 2000);
-    }, 1500);
+    } catch (error) {
+      console.error('Error updating dealer profile:', error);
+      setError('Failed to update profile. Please try again.');
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -261,7 +351,7 @@ export default function DealerProfile() {
             
             <div className="dealer-info">
               <h1>{dealerData.fullName}</h1>
-              <p className="business-name">{dealerData.businessName}</p>
+              <p className="business-name">{dealerData.company_name}</p>
               <p className="dealer-email">{dealerData.email}</p>
               <div className="dealer-stats">
                 <span className="stat">
@@ -270,7 +360,7 @@ export default function DealerProfile() {
                 </span>
                 <span className="stat">
                   <FaBuilding />
-                  {businessStats.yearsInBusiness} Years
+                  {dealerData.yearsInBusiness} Years
                 </span>
               </div>
             </div>
@@ -419,36 +509,6 @@ export default function DealerProfile() {
                     </div>
                   </div>
                   <div className="form-group">
-                    <label>Date of Birth</label>
-                    <div className="input-with-icon">
-                      <FaCalendar />
-                      <input 
-                        type="date"
-                        value={dealerData.dob}
-                        onChange={(e) => handleInputChange('dob', e.target.value)}
-                        disabled={!isEditing}
-                        max={new Date().toISOString().split("T")[0]}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Gender</label>
-                    <select 
-                      value={dealerData.gender} 
-                      onChange={(e) => handleInputChange('gender', e.target.value)}
-                      disabled={!isEditing}
-                    >
-                      <option value="">Select gender</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
-                      <option value="prefer_not_to_say">Prefer not to say</option>
-                    </select>
-                  </div>
-                  <div className="form-group">
                     <label>Country</label>
                     <div className="select-wrapper">
                       <FaGlobe />
@@ -475,15 +535,15 @@ export default function DealerProfile() {
               <div className="form-grid">
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Business Name</label>
+                    <label>Company Name</label>
                     <div className="input-with-icon">
                       <FaBuilding />
                       <input 
                         type="text" 
-                        value={dealerData.businessName} 
-                        onChange={(e) => handleInputChange('businessName', e.target.value)}
+                        value={dealerData.company_name} 
+                        onChange={(e) => handleInputChange('company_name', e.target.value)}
                         disabled={!isEditing}
-                        placeholder="Your Business Name"
+                        placeholder="Your Company Name"
                       />
                     </div>
                   </div>
@@ -510,8 +570,8 @@ export default function DealerProfile() {
                     <FaMapMarkerAlt />
                     <input 
                       type="text" 
-                      value={dealerData.businessAddress} 
-                      onChange={(e) => handleInputChange('businessAddress', e.target.value)}
+                      value={dealerData.address} 
+                      onChange={(e) => handleInputChange('address', e.target.value)}
                       disabled={!isEditing}
                       placeholder="123 Business St, City, State"
                     />
@@ -520,25 +580,23 @@ export default function DealerProfile() {
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Tax ID / EIN</label>
+                    <label>City</label>
                     <input 
                       type="text" 
-                      value={dealerData.taxId} 
-                      onChange={(e) => handleInputChange('taxId', e.target.value)}
+                      value={dealerData.city} 
+                      onChange={(e) => handleInputChange('city', e.target.value)}
                       disabled={!isEditing}
-                      placeholder="12-3456789"
+                      placeholder="City"
                     />
                   </div>
                   <div className="form-group">
-                    <label>Years in Business</label>
+                    <label>State</label>
                     <input 
-                      type="number" 
-                      value={dealerData.yearsInBusiness} 
-                      onChange={(e) => handleInputChange('yearsInBusiness', e.target.value)}
+                      type="text" 
+                      value={dealerData.state} 
+                      onChange={(e) => handleInputChange('state', e.target.value)}
                       disabled={!isEditing}
-                      placeholder="5"
-                      min="0"
-                      max="100"
+                      placeholder="State"
                     />
                   </div>
                 </div>
@@ -555,16 +613,16 @@ export default function DealerProfile() {
                     />
                   </div>
                   <div className="form-group">
-                    <label>Preferred Currency</label>
-                    <select 
-                      value={dealerData.currency} 
-                      onChange={(e) => handleInputChange('currency', e.target.value)}
+                    <label>Years in Business</label>
+                    <input 
+                      type="number" 
+                      value={dealerData.yearsInBusiness} 
+                      onChange={(e) => handleInputChange('yearsInBusiness', e.target.value)}
                       disabled={!isEditing}
-                    >
-                      {currencyList.map((c) => (
-                        <option key={c.code} value={c.code}>{c.code} - {c.name}</option>
-                      ))}
-                    </select>
+                      placeholder="5"
+                      min="0"
+                      max="100"
+                    />
                   </div>
                 </div>
               </div>
