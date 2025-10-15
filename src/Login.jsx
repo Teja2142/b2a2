@@ -116,7 +116,7 @@ export default function Login() {
         password,
       }, {
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'multipart/form-data',
           'X-CSRFTOKEN': API_ENDPOINTS.CSRF_TOKEN,
         },
         timeout: 10000,
