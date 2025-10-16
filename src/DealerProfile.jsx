@@ -1,1365 +1,639 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-// ... SVG Icons remain the same ...
-// --- SVG Icons ---
+// --- API Configuration (MUST BE UPDATED BY USER) ---
+// NOTE: These must be replaced with dynamic values (e.g., loaded from your app state).
+const API_BASE_URL = 'https://api.b2a2cars.com/api';
+// Assuming the DEALER_ID is the UUID used in the profile URL
+const DEALER_ID = '3fa85f64-5717-4562-b3fc-2c963f66afa6'; 
+// Assuming the CSRF token is required for all state-changing requests
+const CSRF_TOKEN = 'F0yGN8NfjlzieXwJc6E93KdD1fKN1YYPc7u1p5tS0MAsruyjwArbR2FbbbjYmPv6'; 
+
+// --- SVG Icons (Standard for all) ---
+const FaHome = () => <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 576 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M280.37 148.26L96 300.11V464a16 16 0 0 0 16 16l112.5.07L224 384c0-17.7 14.3-32 32-32h64c17.7 0 32 14.3 32 32l.07 95.73 112.5-.07a16 16 0 0 0 16-16V300.11L295.63 148.26A24.58 24.58 0 0 0 288 144c-2.8 0-5.6.8-8.37 4.26zM524.52 224.33l-99.73-100.27a8.77 8.77 0 0 0-4.14-2.58l-52.48-11.23a6.83 6.83 0 0 0-4.13.91L288 88l-87.9 44.57a6.83 6.83 0 0 0-4.13-.91L143.25 121.5a8.77 8.77 0 0 0-4.14 2.58L39.48 224.33a8.88 8.88 0 0 0-1.4 12.18l14.18 20.73a8.88 8.88 0 0 0 12.28 1.48L288 163.63l223.56 100.83a8.88 8.88 0 0 0 12.28-1.48l14.18-20.73a8.88 8.88 0 0 0-1.4-12.18z"></path></svg>;
+const FaCarPlus = () => <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 640 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M633.8 281.7l-35.8-35.8c-10.2-10.2-26.6-10.2-36.8 0L544 288V192c0-8.8-7.2-16-16-16H480V96c0-8.8-7.2-16-16-16h-48V32c0-17.7-14.3-32-32-32h-64c-17.7 0-32 14.3-32 32v48H224V32c0-17.7-14.3-32-32-32h-64c-17.7 0-32 14.3-32 32v48H16c-8.8 0-16 7.2-16 16v96H96v96H0v128c0 35.3 28.7 64 64 64h448c35.3 0 64-28.7 64-64V333.7l29.8 29.8c10.2 10.2 26.6 10.2 36.8 0l35.8-35.8c10.2-10.2 10.2-26.6 0-36.8zM448 304v-96h-32v96h32zm-64 0v-96h-32v96h32zM320 304v-96h-32v96h32zm-64 0v-96h-32v96h32zM128 192v-80h32v80h-32zM64 432c0 8.8-7.2 16-16 16s-16-7.2-16-16v-80h32v80zm448 0c0 8.8-7.2 16-16 16s-16-7.2-16-16v-80h32v80z"/></svg>;
+const FaCar = () => <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M499.9 160l-72-64a32.09 32.09 0 0 0-21.3-8H344V48c0-17.67-14.33-32-32-32H32C14.33 16 0 30.33 0 48v288c0 17.67 14.33 32 32 32h32c0 20.8 12.44 39.1 32 46.8V480h64v-32h128v32h64v-49.2c19.56-7.7 32-26 32-46.8h32c17.67 0 32-14.33 32-32V192c0-17.7-14.3-32-32-32zM64 320H32V64h288v96H128c-17.67 0-32 14.33-32 32v128zm102 64c-17.67 0-32 14.33-32 32s14.33 32 32 32 32-14.33 32-32-14.33-32-32-32zm224 0c-17.67 0-32 14.33-32 32s14.33 32 32 32 32-14.33 32-32-14.33-32-32-32zm64-96h-96V192h96v128z"/></svg>;
 const FaUser = () => <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 448 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M224 256c70.7 0 128-57.3 128-128S294.7 0 224 0 96 57.3 96 128s57.3 128 128 128zm89.6 32h-16.7c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16h-16.7C60.2 288 0 348.2 0 422.4V464c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48v-41.6c0-74.2-60.2-134.4-134.4-134.4z"></path></svg>;
-const FaEnvelope = () => <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M502.3 190.8c3.9-3.1 9.7-.2 9.7 4.7V400c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V195.6c0-5 5.7-7.8 9.7-4.7 22.4 17.4 52.1 39.5 154.1 113.6 21.1 15.4 56.7 47.8 92.2 47.6 35.7.3 72-32.8 92.3-47.6 102-74.1 131.6-96.3 154-113.7zM256 320c23.2.4 56.6-29.2 73.4-41.4 132.7-96.3 142.8-104.7 173.4-128.7 5.8-4.5 9.2-11.5 9.2-18.9v-19c0-26.5-21.5-48-48-48H48C21.5 64 0 85.5 0 112v19c0 7.4 3.4 14.3 9.2 18.9 30.6 23.9 40.7 32.4 173.4 128.7 16.8 12.2 50.2 41.8 73.4 41.4z"></path></svg>;
-const FaPhone = () => <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M493.4 24.6l-104-24c-11.3-2.6-22.9 3.3-27.5 13.9l-48 112c-4.2 9.8-1.4 21.3 6.9 28l60.6 49.6c-36 76.7-98.9 140.5-177.2 177.2l-49.6-60.6c-6.8-8.3-18.2-11.1-28-6.9l-112 48C3.9 366.5-2 378.1.6 389.4l24 104C27.1 504.2 36.7 512 48 512c256.1 0 464-207.5 464-464 0-11.2-7.7-20.9-18.6-23.4z"></path></svg>;
-const FaGlobe = () => <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 496 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zM88 240a152 152 0 0 1 53.8-113.5 156.8 156.8 0 0 1 111.3-43.3C293.5 125.5 352 195.9 352 280c0 48.2-21.7 90.3-55.7 119.2-34.2 29-79.3 44.9-129.2 44.9-52.9 0-100-18-135.5-47.5A152.1 152.1 0 0 1 88 240z"></path></svg>;
-const FaMapMarkerAlt = () => <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 384 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M172.268 501.67C26.97 291.031 0 269.413 0 192 0 85.961 85.961 0 192 0s192 85.961 192 192c0 77.413-26.97 99.031-172.268 309.67-9.535 13.774-29.93 13.773-39.464 0zM192 272c44.183 0 80-35.817 80-80s-35.817-80-80-80-80 35.817-80 80 35.817 80 80 80z"></path></svg>;
-const FaCalendar = () => <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 448 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M400 64h-48V12c0-6.6-5.4-12-12-12h-40c-6.6 0-12 5.4-12 12v52H160V12c0-6.6-5.4-12-12-12h-40c-6.6 0-12 5.4-12 12v52H48C21.5 64 0 85.5 0 112v352c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48zm-6 400H54c-3.3 0-6-2.7-6-6V160h352v298c0 3.3-2.7 6-6 6z"></path></svg>;
-const FaSave = () => <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 448 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M433.941 129.941l-83.882-83.882A48 48 0 0 0 316.118 32H48C21.49 32 0 53.49 0 80v352c0 26.51 21.49 48 48 48h352c26.51 0 48-21.49 48-48V163.882a48 48 0 0 0-14.059-33.941zM224 416c-35.346 0-64-28.654-64-64 0-35.346 28.654-64 64-64s64 28.654 64 64c0 35.346-28.654 64-64 64zm96-304.52V212c0 6.627-5.373 12-12 12H76c-6.627 0-12-5.373-12-12V108c0-6.627 5.373-12 12-12h228.52c3.183 0 6.235 1.264 8.485 3.515l3.48 3.48A11.996 11.996 0 0 1 320 111.48z"></path></svg>;
-const FaEdit = () => <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 576 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M402.6 83.2l90.2 90.2c3.8 3.8 3.8 10 0 13.8L274.4 405.6l-92.8 10.3c-12.4 1.4-22.9-9.1-21.5-21.5l10.3-92.8L388.8 83.2c3.8-3.8 10-3.8 13.8 0zm162-22.9l-48.8-48.8c-15.2-15.2-39.9-15.2-55.2 0l-35.4 35.4c-3.8 3.8-3.8 10 0 13.8l90.2 90.2c3.8 3.8 10 3.8 13.8 0l35.4-35.4c15.2-15.3 15.2-40 0-55.2zM384 346.2V448H64V128h229.8c3.2 0 6.2-1.3 8.5-3.5l40-40c7.6-7.6 2.2-20.5-8.5-20.5H48C21.5 64 0 85.5 0 112v352c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V306.2c0-10.7-12.9-16-20.5-8.5l-40 40c-2.2 2.3-3.5 5.3-3.5 8.5z"></path></svg>;
-const FaBuilding = () => <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 448 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M128 148v-40c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v40c0 6.6-5.4 12-12 12h-40c-6.6 0-12-5.4-12-12zm140 12h40c6.6 0 12-5.4 12-12v-40c0-6.6-5.4-12-12-12h-40c-6.6 0-12 5.4-12 12v40c0 6.6 5.4 12 12 12zm-128 96h40c6.6 0 12-5.4 12-12v-40c0-6.6-5.4-12-12-12h-40c-6.6 0-12 5.4-12 12v40c0 6.6 5.4 12 12 12zm128 0h40c6.6 0 12-5.4 12-12v-40c0-6.6-5.4-12-12-12h-40c-6.6 0-12 5.4-12 12v40c0 6.6 5.4 12 12 12zm-76 84v-40c0-6.6-5.4-12-12-12h-40c-6.6 0-12 5.4-12 12v40c0 6.6 5.4 12 12 12h40c6.6 0 12-5.4 12-12zm76 12h40c6.6 0 12-5.4 12-12v-40c0-6.6-5.4-12-12-12h-40c-6.6 0-12 5.4-12 12v40c0 6.6 5.4 12 12 12zm180 124v36H0v-36c0-6.6 5.4-12 12-12h19.5V24c0-13.3 10.7-24 24-24h337c13.3 0 24 10.7 24 24v440H436c6.6 0 12 5.4 12 12zM79.5 463H192v-67c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v67h112.5V49L80 48l-.5 415z"></path></svg>;
-const FaIdCard = () => <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 576 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M528 32H48C21.5 32 0 53.5 0 80v16h576V80c0-26.5-21.5-48-48-48zM0 432c0 26.5 21.5 48 48 48h480c26.5 0 48-21.5 48-48V128H0v304zm352-232c0-4.4 3.6-8 8-8h144c4.4 0 8 3.6 8 8v16c0 4.4-3.6-8-8-8H360c-4.4 0-8 3.6-8 8v-16zm0 64c0-4.4 3.6-8 8-8h144c4.4 0 8 3.6 8 8v16c0 4.4-3.6-8-8-8H360c-4.4 0-8 3.6-8 8v-16zm0 64c0-4.4 3.6-8 8-8h144c4.4 0 8 3.6 8 8v16c0 4.4-3.6-8-8-8H360c-4.4 0-8 3.6-8 8v-16zM176 192c35.3 0 64 28.7 64 64s-28.7 64-64 64-64-28.7-64-64 28.7-64 64-64zM67.1 396.2C75.5 370.1 99.6 352 128 352h96c28.4 0 52.5 18.1 60.9 44.2 3.4 10.5-4.3 21.8-15.5 21.8H82.7c-11.2 0-18.9-11.3-15.6-21.8z"></path></svg>;
-const FaChartLine = () => <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M496 384H64V80c0-8.84-7.16-16-16-16H16C7.16 64 0 71.16 0 80v336c0 17.67 14.33 32 32 32h464c8.84 0 16-7.16 16-16v-32c0-8.84-7.16-16-16-16zM464 96H345.94c-21.38 0-32.09 25.85-16.97 40.97l32.4 32.4L288 242.75l-73.37-73.37c-12.5-12.5-32.76-12.5-45.25 0l-68.69 68.69c-6.25 6.25-6.25 16.38 0 22.63l22.62 22.62c6.25 6.25 16.38 6.25 22.63 0L192 237.25l73.37 73.37c12.5 12.5 32.76 12.5 45.25 0l96-96 32.4 32.4c15.12 15.12 40.97 4.41 40.97-16.97V112c.01-8.84-7.15-16-15.99-16z"></path></svg>;
-const FaUpload = () => <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M296 384h-80c-13.3 0-24-10.7-24-24V192h-87.7c-17.8 0-26.7-21.5-14.1-34.1L242.3 5.7c7.5-7.5 19.8-7.5 27.3 0l152.2 152.2c12.6 12.6 3.7 34.1-14.1 34.1H320v168c0 13.3-10.7 24-24 24zm216-8v112c0 13.3-10.7 24-24 24H24c-13.3 0-24-10.7-24-24V376c0-13.3 10.7-24 24-24h136v8c0 30.9 25.1 56 56 56h80c30.9 0 56-25.1 56-56v-8h136c13.3 0 24 10.7 24 24z"></path></svg>;
-const FaCheck = () => <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206 0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204 0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204 0l36.203 36.204c9.997 9.997 9.997 26.206 0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"></path></svg>;
+const FaSignOutAlt = () => <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M497 273L329 441c-15 15-41 4.5-41-17v-96H48c-26.5 0-48-21.5-48-48V224c0-26.5 21.5-48 48-48h240v-96c0-21.5 25.5-32 41-17l168 168c9.3 9.3 9.3 24.3 0 33.7zM64 420c0 4.4 3.6 8 8 8h192c4.4 0 8-3.6 8-8v-32c0-4.4-3.6-8-8-8H72c-4.4 0-8 3.6-8 8v32zM32 68c0-4.4 3.6-8 8-8h192c4.4 0 8 3.6 8 8v32c0 4.4-3.6 8-8 8H40c-4.4 0-8-3.6-8-8V68z"/></svg>;
+const FaCloudUploadAlt = () => <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M288 384c-12.8 0-25.6-4.9-35.4-14.6l-80-80c-19.5-19.5-19.5-51.2 0-70.7l80-80c19.5-19.5 51.2-19.5 70.7 0 19.5 19.5 19.5 51.2 0 70.7L288 288V48c0-26.5-21.5-48-48-48H48C21.5 0 0 21.5 0 48v416c0 26.5 21.5 48 48 48h240c26.5 0 48-21.5 48-48V416h160c26.5 0 48-21.5 48-48V192c0-26.5-21.5-48-48-48H320c-26.5 0-48 21.5-48 48v32h16c8.8 0 16 7.2 16 16v64c0 8.8-7.2 16-16 16H288z"/></svg>;
 
-// --- Data ---
-const countryList = [
-    { name: 'United States', code: 'US', dialCode: '+1' },
-    { name: 'Canada', code: 'CA', dialCode: '+1' },
-    { name: 'United Kingdom', code: 'GB', dialCode: '+44' },
-    { name: 'Australia', code: 'AU', dialCode: '+61' },
-    { name: 'Germany', code: 'DE', dialCode: '+49' },
-    { name: 'India', code: 'IN', dialCode: '+91' },
-    { name: 'Japan', code: 'JP', dialCode: '+81' },
-];
 
-const currencyList = [
-    { code: 'USD', name: 'United States Dollar' },
-    { code: 'EUR', name: 'Euro' },
-    { code: 'JPY', name: 'Japanese Yen' },
-    { code: 'GBP', name: 'British Pound Sterling' },
-    { code: 'AUD', name: 'Australian Dollar' },
-    { code: 'CAD', name: 'Canadian Dollar' },
-    { code: 'INR', name: 'Indian Rupee' },
-];
+// --- Helper Components ---
 
-export default function DealerProfile() {
-  const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState('profile');
-  
-  // Dealer data state - updated to match API model
-  const [dealerData, setDealerData] = useState({
-    company_name: '',
-    address: '',
-    city: '',
-    state: '',
-    country: '',
-    phone: '',
-    email: '',
-    website: '',
-    // Additional fields for the form
-    businessType: '',
-    taxId: '',
-    yearsInBusiness: '',
-    language: 'en',
-    currency: 'USD',
-    fullName: '', // This might come from user profile
-  });
-
-  const [originalData, setOriginalData] = useState({});
-  const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
-  const [profilePic, setProfilePic] = useState(null);
-  const [profilePicPreview, setProfilePicPreview] = useState('');
-  const [idFile, setIdFile] = useState(null);
-  const [idFilePreview, setIdFilePreview] = useState('');
-
-  // Business stats
-  const [businessStats, setBusinessStats] = useState({
-    totalCars: 0,
-    activeListings: 0,
-    soldCars: 0,
-    rating: 0,
-    revenue: 0
-  });
-
-  // Animation states
-  const [animationClass, setAnimationClass] = useState('');
-
-  // API Configuration
-  const API_BASE_URL = 'https://api.b2a2cars.com/api/dealers';
-  const API_ENDPOINTS = {
-    getProfile: (id) => `${API_BASE_URL}/dealer-profiles/${id}`,
-    updateProfile: (id) => `${API_BASE_URL}/dealer-profiles/${id}`,
-  };
-
-  // Get auth token and dealer ID
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('authToken');
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-      'X-CSRFTOKEN': 'F0yGN8NfjlzieXwJc6E93KdZ1fKN1YYPc7u1p5tS0MAsruyjwArbR2FbbbjYmPv6',
-    };
-  };
-
-  // Load dealer data from API
-  useEffect(() => {
-    const loadDealerData = async () => {
-      setIsLoading(true);
-      
-      try {
-        const dealerId = localStorage.getItem('dealerId');
-        if (!dealerId) {
-          setError('Dealer ID not found. Please login again.');
-          setIsLoading(false);
-          return;
-        }
-
-        const response = await axios.get(
-          API_ENDPOINTS.getProfile(dealerId),
-          { headers: getAuthHeaders() }
-        );
-
-        const apiData = response.data;
-        
-        // Map API data to our form state
-        const mappedData = {
-          company_name: apiData.company_name || '',
-          address: apiData.address || '',
-          city: apiData.city || '',
-          state: apiData.state || '',
-          country: apiData.country || '',
-          phone: apiData.phone || '',
-          email: apiData.email || '',
-          website: apiData.website || '',
-          // Set default values for additional fields
-          businessType: 'luxury',
-          taxId: '12-3456789',
-          yearsInBusiness: '8',
-          language: 'en',
-          currency: 'USD',
-          fullName: 'Michael Rodriguez', // This would ideally come from user profile
-        };
-
-        setDealerData(mappedData);
-        setOriginalData(mappedData);
-        
-        // Mock business stats (you can replace with actual API calls)
-        setBusinessStats({
-          totalCars: 47,
-          activeListings: 23,
-          soldCars: 124,
-          rating: 4.8,
-          revenue: 1250000
-        });
-        
-        setIsLoading(false);
-        setAnimationClass('fade-in-up');
-      } catch (error) {
-        console.error('Error loading dealer profile:', error);
-        setError('Failed to load dealer profile. Please try again.');
-        setIsLoading(false);
-        
-        // Fallback to mock data if API fails
-        const mockDealerData = {
-          company_name: 'Prestige Luxury Cars',
-          address: '123 Auto Plaza, Los Angeles, CA',
-          city: 'Los Angeles',
-          state: 'California',
-          country: 'United States',
-          phone: '+1 5550123456',
-          email: 'michael@prestigecars.com',
-          website: 'www.prestigecars.com',
-          businessType: 'luxury',
-          taxId: '12-3456789',
-          yearsInBusiness: '8',
-          language: 'en',
-          currency: 'USD',
-          fullName: 'Michael Rodriguez',
-        };
-        setDealerData(mockDealerData);
-        setOriginalData(mockDealerData);
-        setIsLoading(false);
-        setAnimationClass('fade-in-up');
-      }
-    };
-
-    loadDealerData();
-  }, []);
-
-  const handleInputChange = (field, value) => {
-    setDealerData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handlePhoneChange = (e) => {
-    const value = e.target.value;
-    const selectedCountry = countryList.find(c => c.name === dealerData.country);
-    
-    if (selectedCountry && value.length < selectedCountry.dialCode.length + 1) {
-      return;
-    }
-    
-    const numbersOnly = value.replace(/[^\d]/g, '');
-    
-    if (selectedCountry) {
-      const phoneDigits = numbersOnly.slice(selectedCountry.dialCode.replace('+', '').length);
-      if (phoneDigits.length <= 10) {
-        handleInputChange('phone', selectedCountry.dialCode + ' ' + phoneDigits);
-      }
-    } else {
-      if (numbersOnly.length <= 15) {
-        handleInputChange('phone', numbersOnly);
-      }
-    }
-  };
-
-  const handleFileChange = (setter, setPreview) => (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setter(file);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPreview(e.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const handleSave = async () => {
-    setError('');
-    setSuccessMessage('');
-
-    if (!validateEmail(dealerData.email)) {
-      setError('Please enter a valid email address');
-      return;
-    }
-
-    if (!dealerData.company_name) {
-      setError('Company name is required');
-      return;
-    }
-
-    setIsSaving(true);
-    
-    try {
-      const dealerId = localStorage.getItem('dealerId');
-      if (!dealerId) {
-        throw new Error('Dealer ID not found');
-      }
-
-      // Prepare data for API - only send fields that the API expects
-      const apiData = {
-        company_name: dealerData.company_name,
-        address: dealerData.address,
-        city: dealerData.city,
-        state: dealerData.state,
-        country: dealerData.country,
-        phone: dealerData.phone,
-        email: dealerData.email,
-        website: dealerData.website,
-        // Add other fields that your API expects
-      };
-
-      const response = await axios.put(
-        API_ENDPOINTS.updateProfile(dealerId),
-        apiData,
-        { headers: getAuthHeaders() }
-      );
-
-      setOriginalData(dealerData);
-      setIsEditing(false);
-      setIsSaving(false);
-      setSuccessMessage('Dealer profile updated successfully!');
-      setAnimationClass('success-glow');
-      
-      setTimeout(() => {
-        setAnimationClass('');
-      }, 2000);
-    } catch (error) {
-      console.error('Error updating dealer profile:', error);
-      setError('Failed to update profile. Please try again.');
-      setIsSaving(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setDealerData(originalData);
-    setIsEditing(false);
-    setError('');
-    setAnimationClass('slide-out-right');
-    setTimeout(() => setAnimationClass(''), 300);
-  };
-
-  const hasChanges = JSON.stringify(dealerData) !== JSON.stringify(originalData);
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: dealerData.currency,
-      minimumFractionDigits: 0
-    }).format(amount);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="dealer-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>Loading dealer profile...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="dealer-container">
-      <div className={`dealer-card ${animationClass}`}>
-        {/* Header Section */}
-        <div className="dealer-header">
-          <div className="dealer-identity">
-            <div className="avatar-section">
-              <div className="avatar-container">
-                <div className="avatar">
-                  {profilePicPreview ? (
-                    <img src={profilePicPreview} alt="Dealer" />
-                  ) : (
-                    <FaUser />
-                  )}
-                </div>
-                {isEditing && (
-                  <label className="avatar-upload">
-                    <input 
-                      type="file" 
-                      onChange={handleFileChange(setProfilePic, setProfilePicPreview)} 
-                      accept=".jpg,.jpeg,.png" 
-                    />
-                    <FaEdit />
-                  </label>
-                )}
-              </div>
-              <div className="verification-badge">
-                <FaCheck />
-                <span>Verified Dealer</span>
-              </div>
-            </div>
-            
-            <div className="dealer-info">
-              <h1>{dealerData.fullName}</h1>
-              <p className="business-name">{dealerData.company_name}</p>
-              <p className="dealer-email">{dealerData.email}</p>
-              <div className="dealer-stats">
-                <span className="stat">
-                  <FaChartLine />
-                  {businessStats.rating}/5 Rating
-                </span>
-                <span className="stat">
-                  <FaBuilding />
-                  {dealerData.yearsInBusiness} Years
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="header-actions">
-            {!isEditing ? (
-              <button 
-                className="edit-btn"
-                onClick={() => {
-                  setIsEditing(true);
-                  setAnimationClass('expand-in');
-                }}
-              >
-                <FaEdit /> Edit Profile
-              </button>
-            ) : (
-              <div className="edit-actions">
-                <button 
-                  className="save-btn"
-                  onClick={handleSave}
-                  disabled={isSaving || !hasChanges}
-                >
-                  {isSaving ? 'Saving...' : <><FaSave /> Save Changes</>}
-                </button>
-                <button 
-                  className="cancel-btn"
-                  onClick={handleCancel}
-                >
-                  Cancel
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Business Stats Overview */}
-        <div className="stats-overview">
-          <div className="stat-card">
-            <div className="stat-icon total-cars">
-              <FaBuilding />
-            </div>
-            <div className="stat-info">
-              <h3>{businessStats.totalCars}</h3>
-              <p>Total Cars</p>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon active-listings">
-              <FaChartLine />
-            </div>
-            <div className="stat-info">
-              <h3>{businessStats.activeListings}</h3>
-              <p>Active Listings</p>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon sold-cars">
-              <FaCheck />
-            </div>
-            <div className="stat-info">
-              <h3>{businessStats.soldCars}</h3>
-              <p>Cars Sold</p>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon revenue">
-              <FaChartLine />
-            </div>
-            <div className="stat-info">
-              <h3>{formatCurrency(businessStats.revenue)}</h3>
-              <p>Total Revenue</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Navigation Tabs */}
-        <div className="tab-navigation">
-          <button 
-            className={`tab-btn ${activeTab === 'profile' ? 'active' : ''}`}
-            onClick={() => setActiveTab('profile')}
-          >
-            Profile Details
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'business' ? 'active' : ''}`}
-            onClick={() => setActiveTab('business')}
-          >
-            Business Info
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'documents' ? 'active' : ''}`}
-            onClick={() => setActiveTab('documents')}
-          >
-            Documents
-          </button>
-        </div>
-
-        {/* Tab Content */}
-        <div className="tab-content">
-          {activeTab === 'profile' && (
-            <div className="form-section personal-info">
-              <h2>Personal Information</h2>
-              <div className="form-grid">
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Full Name</label>
-                    <div className="input-with-icon">
-                      <FaUser />
-                      <input 
-                        type="text" 
-                        value={dealerData.fullName} 
-                        onChange={(e) => handleInputChange('fullName', e.target.value)}
-                        disabled={!isEditing}
-                        placeholder="John Doe"
-                      />
-                    </div>
-                  </div>
-                  <div className="form-group">
-                    <label>Email Address</label>
-                    <div className="input-with-icon">
-                      <FaEnvelope />
-                      <input 
-                        type="email" 
-                        value={dealerData.email} 
-                        onChange={(e) => handleInputChange('email', e.target.value)}
-                        disabled={!isEditing}
-                        placeholder="your@email.com"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Phone Number</label>
-                    <div className="input-with-icon">
-                      <FaPhone />
-                      <input 
-                        type="tel" 
-                        value={dealerData.phone} 
-                        onChange={handlePhoneChange}
-                        disabled={!isEditing}
-                        placeholder="+1 1234567890"
-                      />
-                    </div>
-                  </div>
-                  <div className="form-group">
-                    <label>Country</label>
-                    <div className="select-wrapper">
-                      <FaGlobe />
-                      <select 
-                        value={dealerData.country} 
-                        onChange={(e) => handleInputChange('country', e.target.value)}
-                        disabled={!isEditing}
-                      >
-                        <option value="">Select your country</option>
-                        {countryList.map((c) => (
-                          <option key={c.code} value={c.name}>{c.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'business' && (
-            <div className="form-section business-info">
-              <h2>Business Information</h2>
-              <div className="form-grid">
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Company Name</label>
-                    <div className="input-with-icon">
-                      <FaBuilding />
-                      <input 
-                        type="text" 
-                        value={dealerData.company_name} 
-                        onChange={(e) => handleInputChange('company_name', e.target.value)}
-                        disabled={!isEditing}
-                        placeholder="Your Company Name"
-                      />
-                    </div>
-                  </div>
-                  <div className="form-group">
-                    <label>Business Type</label>
-                    <select 
-                      value={dealerData.businessType} 
-                      onChange={(e) => handleInputChange('businessType', e.target.value)}
-                      disabled={!isEditing}
-                    >
-                      <option value="">Select business type</option>
-                      <option value="luxury">Luxury Vehicles</option>
-                      <option value="family">Family Cars</option>
-                      <option value="sports">Sports Cars</option>
-                      <option value="commercial">Commercial Vehicles</option>
-                      <option value="multi">Multi-Brand Dealer</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label>Business Address</label>
-                  <div className="input-with-icon">
-                    <FaMapMarkerAlt />
-                    <input 
-                      type="text" 
-                      value={dealerData.address} 
-                      onChange={(e) => handleInputChange('address', e.target.value)}
-                      disabled={!isEditing}
-                      placeholder="123 Business St, City, State"
-                    />
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>City</label>
-                    <input 
-                      type="text" 
-                      value={dealerData.city} 
-                      onChange={(e) => handleInputChange('city', e.target.value)}
-                      disabled={!isEditing}
-                      placeholder="City"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>State</label>
-                    <input 
-                      type="text" 
-                      value={dealerData.state} 
-                      onChange={(e) => handleInputChange('state', e.target.value)}
-                      disabled={!isEditing}
-                      placeholder="State"
-                    />
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Website</label>
-                    <input 
-                      type="url" 
-                      value={dealerData.website} 
-                      onChange={(e) => handleInputChange('website', e.target.value)}
-                      disabled={!isEditing}
-                      placeholder="www.yourbusiness.com"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Years in Business</label>
-                    <input 
-                      type="number" 
-                      value={dealerData.yearsInBusiness} 
-                      onChange={(e) => handleInputChange('yearsInBusiness', e.target.value)}
-                      disabled={!isEditing}
-                      placeholder="5"
-                      min="0"
-                      max="100"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'documents' && (
-            <div className="form-section documents">
-              <h2>Business Documents</h2>
-              <div className="documents-grid">
-                <div className="document-upload">
-                  <label>Dealer License</label>
-                  <div className="file-upload-area">
-                    <FaUpload />
-                    <p>Upload your dealer license document</p>
-                    <span>PDF, JPG, PNG (Max 5MB)</span>
-                    <input 
-                      type="file" 
-                      onChange={handleFileChange(setIdFile, setIdFilePreview)}
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      disabled={!isEditing}
-                    />
-                  </div>
-                </div>
-
-                <div className="document-upload">
-                  <label>Business Registration</label>
-                  <div className="file-upload-area">
-                    <FaUpload />
-                    <p>Upload business registration certificate</p>
-                    <span>PDF, JPG, PNG (Max 5MB)</span>
-                    <input 
-                      type="file" 
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      disabled={!isEditing}
-                    />
-                  </div>
-                </div>
-
-                <div className="document-upload">
-                  <label>Tax Identification</label>
-                  <div className="file-upload-area">
-                    <FaUpload />
-                    <p>Upload tax identification document</p>
-                    <span>PDF, JPG, PNG (Max 5MB)</span>
-                    <input 
-                      type="file" 
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      disabled={!isEditing}
-                    />
-                  </div>
-                </div>
-
-                <div className="document-upload">
-                  <label>Insurance Certificate</label>
-                  <div className="file-upload-area">
-                    <FaUpload />
-                    <p>Upload business insurance certificate</p>
-                    <span>PDF, JPG, PNG (Max 5MB)</span>
-                    <input 
-                      type="file" 
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      disabled={!isEditing}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {error && <div className="error-message animate-shake">{error}</div>}
-        {successMessage && <div className="success-message animate-bounce-in">{successMessage}</div>}
-      </div>
-
-      <style jsx>{`
-        .dealer-container { 
-          display: flex; 
-          align-items: center; 
-          justify-content: center; 
-          min-height: 100vh; 
-          padding: 2rem; 
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          width: 100%;
-        }
-
-        .dealer-card { 
-          width: 95%; 
-          max-width: 1200px; 
-          background: white; 
-          border-radius: 1.5rem; 
-          box-shadow: 0 25px 80px rgba(0, 0, 0, 0.15); 
-          overflow: hidden;
-          transition: all 0.4s ease;
-        }
-
-        /* Enhanced Animations */
-        .fade-in-up {
-          animation: fadeInUp 0.8s ease-out;
-        }
-
-        .expand-in {
-          animation: expandIn 0.6s ease-out;
-        }
-
-        .slide-out-right {
-          animation: slideOutRight 0.3s ease-in;
-        }
-
-        .success-glow {
-          animation: successGlow 2s ease-in-out;
-        }
-
-        @keyframes fadeInUp {
-          from { 
-            opacity: 0; 
-            transform: translateY(50px) scale(0.95); 
-          }
-          to { 
-            opacity: 1; 
-            transform: translateY(0) scale(1); 
-          }
-        }
-
-        @keyframes expandIn {
-          from { 
-            transform: scale(0.92); 
-            opacity: 0; 
-          }
-          to { 
-            transform: scale(1); 
-            opacity: 1; 
-          }
-        }
-
-        @keyframes slideOutRight {
-          from { transform: translateX(0); opacity: 1; }
-          to { transform: translateX(100%); opacity: 0; }
-        }
-
-        @keyframes successGlow {
-          0% { 
-            box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7),
-                       0 25px 80px rgba(0, 0, 0, 0.15);
-          }
-          50% { 
-            box-shadow: 0 0 0 20px rgba(72, 187, 120, 0.3),
-                       0 30px 100px rgba(0, 0, 0, 0.2);
-          }
-          100% { 
-            box-shadow: 0 0 0 0 rgba(72, 187, 120, 0),
-                       0 25px 80px rgba(0, 0, 0, 0.15);
-          }
-        }
-
-        .animate-shake {
-          animation: shake 0.5s ease-in-out;
-        }
-
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-8px); }
-          75% { transform: translateX(8px); }
-        }
-
-        .animate-bounce-in {
-          animation: bounceIn 0.6s ease-out;
-        }
-
-        @keyframes bounceIn {
-          0% { transform: scale(0.3); opacity: 0; }
-          50% { transform: scale(1.05); }
-          70% { transform: scale(0.95); }
-          100% { transform: scale(1); opacity: 1; }
-        }
-
-        /* Header Styles */
-        .dealer-header {
-          background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
-          color: white;
-          padding: 3rem 2.5rem;
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          flex-wrap: wrap;
-          gap: 2rem;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .dealer-header::before {
-          content: '';
-          position: absolute;
-          top: -50%;
-          right: -50%;
-          width: 100%;
-          height: 200%;
-          background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
-          background-size: 20px 20px;
-          animation: float 20s linear infinite;
-        }
-
-        @keyframes float {
-          0% { transform: translate(0, 0) rotate(0deg); }
-          100% { transform: translate(-20px, -20px) rotate(360deg); }
-        }
-
-        .dealer-identity {
-          display: flex;
-          align-items: flex-start;
-          gap: 2rem;
-          flex: 1;
-        }
-
-        .avatar-section {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 1rem;
-        }
-
-        .avatar-container {
-          position: relative;
-        }
-
-        .avatar {
-          width: 120px;
-          height: 120px;
-          border-radius: 50%;
-          background: rgba(255, 255, 255, 0.2);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 3rem;
-          color: white;
-          border: 4px solid rgba(255, 255, 255, 0.3);
-          overflow: hidden;
-          backdrop-filter: blur(10px);
-        }
-
-        .avatar img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-
-        .avatar-upload {
-          position: absolute;
-          bottom: 5px;
-          right: 5px;
-          background: #48bb78;
-          border-radius: 50%;
-          width: 40px;
-          height: 40px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          border: 3px solid white;
-          transition: all 0.3s ease;
-        }
-
-        .avatar-upload:hover {
-          transform: scale(1.1) rotate(15deg);
-          background: #38a169;
-        }
-
-        .avatar-upload input {
-          display: none;
-        }
-
-        .verification-badge {
-          background: rgba(72, 187, 120, 0.9);
-          padding: 0.5rem 1rem;
-          border-radius: 2rem;
-          font-size: 0.875rem;
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .dealer-info h1 {
-          font-size: 2.5rem;
-          font-weight: 700;
-          margin-bottom: 0.5rem;
-          text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .business-name {
-          font-size: 1.4rem;
-          opacity: 0.9;
-          margin-bottom: 0.5rem;
-          font-weight: 600;
-        }
-
-        .dealer-email {
-          opacity: 0.8;
-          margin-bottom: 1rem;
-        }
-
-        .dealer-stats {
-          display: flex;
-          gap: 1.5rem;
-        }
-
-        .stat {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          background: rgba(255, 255, 255, 0.2);
-          padding: 0.5rem 1rem;
-          border-radius: 2rem;
-          font-size: 0.875rem;
-          font-weight: 600;
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .header-actions {
-          display: flex;
-          gap: 1rem;
-        }
-
-        .edit-btn, .save-btn, .cancel-btn {
-          padding: 0.875rem 1.5rem;
-          border: none;
-          border-radius: 0.75rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-
-        .edit-btn {
-          background: rgba(255, 255, 255, 0.2);
-          color: white;
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .edit-btn:hover {
-          background: rgba(255, 255, 255, 0.3);
-          transform: translateY(-2px);
-          box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
-
-        .save-btn {
-          background: #48bb78;
-          color: white;
-        }
-
-        .save-btn:hover:not(:disabled) {
-          background: #38a169;
-          transform: translateY(-2px);
-          box-shadow: 0 10px 25px rgba(72, 187, 120, 0.3);
-        }
-
-        .save-btn:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-          transform: none;
-        }
-
-        .cancel-btn {
-          background: #e53e3e;
-          color: white;
-        }
-
-        .cancel-btn:hover {
-          background: #c53030;
-          transform: translateY(-2px);
-          box-shadow: 0 10px 25px rgba(229, 62, 62, 0.3);
-        }
-
-        .edit-actions {
-          display: flex;
-          gap: 1rem;
-        }
-
-        /* Stats Overview */
-        .stats-overview {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 1.5rem;
-          padding: 2rem 2.5rem;
-          background: #f8fafc;
-        }
-
-        .stat-card {
-          background: white;
-          padding: 1.5rem;
-          border-radius: 1rem;
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-          transition: all 0.3s ease;
-          border-left: 4px solid #667eea;
-        }
-
-        .stat-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        .stat-icon {
-          width: 60px;
-          height: 60px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 1.5rem;
-          color: white;
-        }
-
-        .stat-icon.total-cars { background: #667eea; }
-        .stat-icon.active-listings { background: #ed8936; }
-        .stat-icon.sold-cars { background: #48bb78; }
-        .stat-icon.revenue { background: #9f7aea; }
-
-        .stat-info h3 {
-          font-size: 1.8rem;
-          font-weight: 700;
-          color: #2d3748;
-          margin-bottom: 0.25rem;
-        }
-
-        .stat-info p {
-          color: #718096;
-          font-size: 0.9rem;
-          font-weight: 600;
-        }
-
-        /* Tab Navigation */
-        .tab-navigation {
-          display: flex;
-          background: #f1f5f9;
-          padding: 0 2.5rem;
-          border-bottom: 1px solid #e2e8f0;
-        }
-
-        .tab-btn {
-          padding: 1.25rem 2rem;
-          border: none;
-          background: transparent;
-          font-weight: 600;
-          color: #64748b;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          position: relative;
-          border-bottom: 3px solid transparent;
-        }
-
-        .tab-btn.active {
-          color: #667eea;
-          border-bottom-color: #667eea;
-        }
-
-        .tab-btn:hover:not(.active) {
-          color: #475569;
-          background: rgba(102, 126, 234, 0.1);
-        }
-
-        .tab-btn::after {
-          content: '';
-          position: absolute;
-          bottom: -3px;
-          left: 50%;
-          width: 0;
-          height: 3px;
-          background: #667eea;
-          transition: all 0.3s ease;
-          transform: translateX(-50%);
-        }
-
-        .tab-btn.active::after {
-          width: 100%;
-        }
-
-        /* Tab Content */
-        .tab-content {
-          padding: 2.5rem;
-        }
-
-        .form-section {
-          background: #f8fafc;
-          padding: 2.5rem;
-          border-radius: 1rem;
-          border-left: 4px solid #667eea;
-          transition: all 0.3s ease;
-        }
-
-        .form-section:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
-
-        .form-section h2 {
-          font-size: 1.5rem;
-          font-weight: 600;
-          color: #2d3748;
-          margin-bottom: 2rem;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-
-        .form-grid {
-          display: flex;
-          flex-direction: column;
-          gap: 1.5rem;
-        }
-
-        .form-row {
-          display: flex;
-          gap: 1.5rem;
-        }
-
-        .form-group {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-        }
-
-        label {
-          font-weight: 600;
-          color: #4a5568;
-          margin-bottom: 0.5rem;
-          font-size: 0.9rem;
-        }
-
-        input, select {
-          padding: 0.875rem 1rem;
-          border: 2px solid #e2e8f0;
-          border-radius: 0.75rem;
-          font-size: 1rem;
-          transition: all 0.3s ease;
-          background: white;
-        }
-
-        input:focus, select:focus {
-          outline: none;
-          border-color: #667eea;
-          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        input:disabled, select:disabled {
-          background: #f7fafc;
-          color: #a0aec0;
-          cursor: not-allowed;
-        }
-
-        .input-with-icon, .select-wrapper {
-          position: relative;
-        }
-
-        .input-with-icon svg, .select-wrapper svg {
-          position: absolute;
-          left: 1rem;
-          top: 50%;
-          transform: translateY(-50%);
-          color: #a0aec0;
-          z-index: 1;
-        }
-
-        .input-with-icon input {
-          padding-left: 2.75rem;
-        }
-
-        .select-wrapper select {
-          padding-left: 2.75rem;
-          width: 100%;
-          appearance: none;
-        }
-
-        /* Documents Section */
-        .documents-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: 1.5rem;
-        }
-
-        .document-upload label {
-          display: block;
-          margin-bottom: 1rem;
-          font-weight: 600;
-          color: #2d3748;
-        }
-
-        .file-upload-area {
-          border: 2px dashed #cbd5e0;
-          border-radius: 1rem;
-          padding: 2rem;
-          text-align: center;
-          transition: all 0.3s ease;
-          background: #fafafa;
-          position: relative;
-          cursor: pointer;
-        }
-
-        .file-upload-area:hover {
-          border-color: #667eea;
-          background: #f0f4ff;
-        }
-
-        .file-upload-area svg {
-          font-size: 2rem;
-          color: #a0aec0;
-          margin-bottom: 1rem;
-        }
-
-        .file-upload-area p {
-          font-weight: 600;
-          color: #4a5568;
-          margin-bottom: 0.5rem;
-        }
-
-        .file-upload-area span {
-          color: #718096;
-          font-size: 0.875rem;
-        }
-
-        .file-upload-area input {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          opacity: 0;
-          cursor: pointer;
-        }
-
-        .error-message {
-          background: #fed7d7;
-          color: #c53030;
-          padding: 1rem;
-          border-radius: 0.75rem;
-          margin: 1rem 0;
-          text-align: center;
-          border-left: 4px solid #e53e3e;
-        }
-
-        .success-message {
-          background: #c6f6d5;
-          color: #276749;
-          padding: 1rem;
-          border-radius: 0.75rem;
-          margin: 1rem 0;
-          text-align: center;
-          border-left: 4px solid #48bb78;
-        }
-
-        .loading-spinner {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 4rem;
-          color: white;
-        }
-
-        .spinner {
-          width: 50px;
-          height: 50px;
-          border: 4px solid rgba(255, 255, 255, 0.3);
-          border-left: 4px solid white;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-          margin-bottom: 1rem;
-        }
-
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
-          .dealer-container { 
-            padding: 1rem; 
-          }
-          .dealer-card { 
-            width: 100%; 
-          }
-          .dealer-header {
-            padding: 2rem 1.5rem;
-            flex-direction: column;
-            text-align: center;
-          }
-          .dealer-identity {
-            flex-direction: column;
-            align-items: center;
-          }
-          .dealer-stats {
-            justify-content: center;
-          }
-          .stats-overview {
-            grid-template-columns: 1fr;
-            padding: 1.5rem;
-          }
-          .tab-navigation {
-            flex-direction: column;
-            padding: 0;
-          }
-          .tab-content {
-            padding: 1.5rem;
-          }
-          .form-section {
-            padding: 1.5rem;
-          }
-          .form-row {
-            flex-direction: column;
-            gap: 1rem;
-          }
-          .documents-grid {
-            grid-template-columns: 1fr;
-          }
-          .header-actions {
-            width: 100%;
-            justify-content: center;
-          }
-          .edit-actions {
-            flex-direction: column;
-            width: 100%;
-          }
-          .edit-btn, .save-btn, .cancel-btn {
-            width: 100%;
-            justify-content: center;
-          }
-        }
-      `}</style>
+const LoadingSpinner = () => (
+    <div className="flex items-center justify-center p-8">
+        <svg className="animate-spin h-8 w-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
     </div>
-  );
-}
+);
+
+const SidebarButton = ({ icon: Icon, label, isActive, onClick }) => (
+    <button
+        onClick={onClick}
+        className={`w-full flex items-center p-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+            isActive
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/50'
+                : 'text-indigo-900 hover:bg-indigo-100 hover:text-indigo-700'
+        }`}
+    >
+        <Icon className="w-5 h-5 mr-3" />
+        {label}
+    </button>
+);
+
+const Sidebar = ({ active, setActive, handleLogout }) => {
+    const sections = [
+        { name: 'Home', label: 'Dashboard Home', icon: FaHome },
+        { name: 'PostVehicle', label: 'Post New Vehicle', icon: FaCarPlus },
+        { name: 'MyVehicles', label: 'My Vehicles', icon: FaCar },
+        { name: 'ProfileUpdate', label: 'Profile Update', icon: FaUser },
+    ];
+
+    return (
+        <div className="w-64 bg-white border-r border-gray-200 p-6 flex flex-col justify-between shadow-xl transition-all duration-300">
+            <div>
+                <h1 className="text-2xl font-extrabold text-indigo-700 mb-8">Dealer Portal</h1>
+                <nav className="space-y-3">
+                    {sections.map(section => (
+                        <SidebarButton
+                            key={section.name}
+                            icon={section.icon}
+                            label={section.label}
+                            isActive={active === section.name}
+                            onClick={() => setActive(section.name)}
+                        />
+                    ))}
+                </nav>
+            </div>
+            <div className="pt-4 border-t border-gray-200">
+                <SidebarButton
+                    icon={FaSignOutAlt}
+                    label="Logout"
+                    isActive={false}
+                    onClick={handleLogout}
+                />
+            </div>
+        </div>
+    );
+};
+
+// --- Section Content Components ---
+
+const HomeContent = ({ dealerData }) => (
+    <div className="p-8 space-y-6 bg-gray-50 min-h-full">
+        <h2 className="text-4xl font-bold text-gray-800">Welcome back, {dealerData.company_name || 'Dealer'}!</h2>
+        <p className="text-gray-600 text-lg">Your central hub for managing inventory and profile details. Always ensure your profile details are up-to-date.</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+            <div className="bg-white p-6 rounded-xl shadow-lg border-t-4 border-indigo-500">
+                <p className="text-sm font-medium text-gray-500">Profile Email</p>
+                <p className="text-xl font-bold text-gray-900 mt-1 truncate">{dealerData.email || 'N/A'}</p>
+            </div>
+            <div className="bg-white p-6 rounded-xl shadow-lg border-t-4 border-green-500">
+                <p className="text-sm font-medium text-gray-500">Contact Phone</p>
+                <p className="text-xl font-bold text-gray-900 mt-1">{dealerData.phone || 'N/A'}</p>
+            </div>
+            <div className="bg-white p-6 rounded-xl shadow-lg border-t-4 border-yellow-500">
+                <p className="text-sm font-medium text-gray-500">Location</p>
+                <p className="text-xl font-bold text-gray-900 mt-1">{dealerData.city || 'N/A'}, {dealerData.state || 'N/A'}</p>
+            </div>
+        </div>
+        <p className="text-sm text-gray-500 pt-4">Note: Statistics like "Total Listings" would require another API endpoint not provided here.</p>
+    </div>
+);
+
+const MyVehiclesContent = () => (
+    <div className="p-8 space-y-6 bg-gray-50 min-h-full">
+        <h2 className="text-4xl font-bold text-gray-800 border-b pb-4">My Vehicles</h2>
+        <div className="bg-white p-6 rounded-xl shadow-lg">
+            <p className="text-gray-600">This section would fetch and display a list of all vehicles associated with your dealer profile using a dedicated `GET` request.</p>
+            <div className="mt-4 p-4 border border-blue-200 rounded-lg bg-blue-50">
+                <p className="font-semibold text-blue-800">API Endpoint required:</p>
+                <code className="text-xs text-blue-700">GET {API_BASE_URL}/vehicles/vehicles/?dealer={DEALER_ID}</code>
+            </div>
+        </div>
+    </div>
+);
+
+const PostVehicleContent = () => {
+    const initialVehicleState = {
+        vin: '', make: '', model: '', year: 2024, color: '', mileage: 0,
+        features: '', description: '', registration_number: '', price: '',
+        starting_price: '', transmission: 'automatic', fuel_type: 'petrol',
+        body_style: 'sedan', status: 'active'
+    };
+    const [vehicleData, setVehicleData] = useState(initialVehicleState);
+    const [images, setImages] = useState([]);
+    const [postedVehicleId, setPostedVehicleId] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState(null);
+    const [uploadingImages, setUploadingImages] = useState(false);
+
+    const handleChange = (e) => {
+        const { name, value, type } = e.target;
+        setVehicleData(prev => ({
+            ...prev,
+            [name]: type === 'number' ? parseFloat(value) : value
+        }));
+    };
+
+    const handleImageChange = (e) => {
+        // Ensure files exist before setting state
+        if (e.target.files) {
+            setImages(Array.from(e.target.files));
+        }
+    };
+
+    const uploadImages = async (vehicleId) => {
+        if (images.length === 0) return true;
+
+        setUploadingImages(true);
+        try {
+            if (images.length === 1) {
+                // Single image upload endpoint (assumes multipart/form-data for file upload)
+                const formData = new FormData();
+                formData.append('vehicle', vehicleId);
+                formData.append('image', images[0]);
+
+                await axios.post(`${API_BASE_URL}/vehicles/vehicle-images/`, formData, {
+                    headers: { 'X-CSRFTOKEN': CSRF_TOKEN, 'Content-Type': 'multipart/form-data' }
+                });
+
+            } else {
+                // Bulk image upload endpoint
+                // NOTE: The cURL suggested passing an array of "string" which usually means base64 image data 
+                // for bulk JSON uploads. We must convert files to base64 before sending.
+                
+                const base64Images = await Promise.all(images.map(file => {
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result.split(',')[1]); // Only the base64 data part
+                        reader.onerror = error => reject(error);
+                        reader.readAsDataURL(file);
+                    });
+                }));
+
+
+                await axios.post(`${API_BASE_URL}/vehicles/vehicle-images/bulk-upload/`, {
+                    vehicle: vehicleId,
+                    images: base64Images
+                }, {
+                    headers: { 'X-CSRFTOKEN': CSRF_TOKEN, 'Content-Type': 'application/json' }
+                });
+            }
+            return true;
+        } catch (error) {
+            console.error('Image Upload Error:', error.response || error);
+            setMessage({ type: 'error', text: 'Vehicle details saved, but image upload failed.' });
+            return false;
+        } finally {
+            setUploadingImages(false);
+        }
+    };
+
+    const handleSubmitVehicle = async (e) => {
+        e.preventDefault();
+        setMessage(null);
+        setLoading(true);
+        setPostedVehicleId(null);
+
+        // Prepare API payload, ensuring year and mileage are correct types
+        const payload = {
+            ...vehicleData,
+            year: parseInt(vehicleData.year),
+            mileage: parseFloat(vehicleData.mileage),
+        };
+
+        try {
+            // Step 1: Post Vehicle Details (application/json)
+            const response = await axios.post(`${API_BASE_URL}/vehicles/vehicles/`, payload, {
+                headers: { 'X-CSRFTOKEN': CSRF_TOKEN, 'Content-Type': 'application/json' }
+            });
+
+            // Assuming the API returns the new vehicle object with an 'id' or 'vin'
+            const vehicleId = response.data.id || response.data.vin; 
+            setPostedVehicleId(vehicleId);
+
+            // Step 2: Upload Images (only if details were successful)
+            const imagesSuccess = await uploadImages(vehicleId);
+
+            if (imagesSuccess) {
+                setMessage({ type: 'success', text: `Vehicle successfully posted! ID: ${vehicleId}` });
+                setVehicleData(initialVehicleState);
+                setImages([]);
+            }
+
+        } catch (error) {
+            console.error('Vehicle Post Error:', error.response || error);
+            const errorText = error.response?.data ? JSON.stringify(error.response.data) : error.message;
+            setMessage({ type: 'error', text: `Failed to post vehicle: ${errorText}` });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const renderInput = (label, name, type = 'text', required = true) => (
+        <div className="flex flex-col form-row">
+            <label htmlFor={name} className="font-medium text-gray-600 mb-1">{label}</label>
+            <input
+                type={type}
+                id={name}
+                name={name}
+                value={vehicleData[name]}
+                onChange={handleChange}
+                className="border border-gray-300 p-2 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                required={required}
+            />
+        </div>
+    );
+
+    const renderSelect = (label, name, options) => (
+        <div className="flex flex-col form-row">
+            <label htmlFor={name} className="font-medium text-gray-600 mb-1">{label}</label>
+            <select
+                id={name}
+                name={name}
+                value={vehicleData[name]}
+                onChange={handleChange}
+                className="border border-gray-300 p-2 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+            >
+                {options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+            </select>
+        </div>
+    );
+
+    return (
+        <div className="p-8 space-y-6 bg-gray-50 min-h-full">
+            <h2 className="text-4xl font-bold text-gray-800 border-b pb-4">Post New Vehicle</h2>
+            
+            {message && (
+                <div className={`p-4 rounded-lg font-medium ${message.type === 'success' ? 'bg-green-100 text-green-800 border border-green-300' : 'bg-red-100 text-red-800 border border-red-300'}`}>
+                    {message.text}
+                </div>
+            )}
+
+            <form onSubmit={handleSubmitVehicle} className="space-y-6">
+                <div className="bg-white p-6 rounded-xl shadow-lg grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <h3 className="text-xl font-semibold text-indigo-700 md:col-span-3">Core Details</h3>
+                    {renderInput('VIN', 'vin')}
+                    {renderInput('Make', 'make')}
+                    {renderInput('Model', 'model')}
+                    {renderInput('Year', 'year', 'number')}
+                    {renderInput('Color', 'color')}
+                    {renderInput('Mileage (km)', 'mileage', 'number')}
+                </div>
+
+                <div className="bg-white p-6 rounded-xl shadow-lg grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <h3 className="text-xl font-semibold text-indigo-700 md:col-span-3">Pricing & Status</h3>
+                    {renderInput('Price', 'price', 'text')}
+                    {renderInput('Starting Price', 'starting_price', 'text')}
+                    {renderInput('Registration Number', 'registration_number')}
+                    {renderSelect('Status', 'status', [
+                        { value: 'active', label: 'Active' },
+                        { value: 'pending', label: 'Pending' },
+                        { value: 'sold', label: 'Sold' },
+                    ])}
+                </div>
+                
+                <div className="bg-white p-6 rounded-xl shadow-lg grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <h3 className="text-xl font-semibold text-indigo-700 md:col-span-3">Specifications</h3>
+                    {renderSelect('Transmission', 'transmission', [
+                        { value: 'automatic', label: 'Automatic' },
+                        { value: 'manual', label: 'Manual' },
+                    ])}
+                    {renderSelect('Fuel Type', 'fuel_type', [
+                        { value: 'petrol', label: 'Petrol' },
+                        { value: 'diesel', label: 'Diesel' },
+                        { value: 'electric', label: 'Electric' },
+                    ])}
+                    {renderSelect('Body Style', 'body_style', [
+                        { value: 'sedan', label: 'Sedan' },
+                        { value: 'suv', label: 'SUV' },
+                        { value: 'truck', label: 'Truck' },
+                        { value: 'coupe', label: 'Coupe' },
+                    ])}
+                    <div className="flex flex-col md:col-span-3">
+                        <label htmlFor="features" className="font-medium text-gray-600 mb-1">Features (Comma Separated)</label>
+                        <textarea
+                            id="features" name="features" rows="2" value={vehicleData.features}
+                            onChange={handleChange}
+                            className="border border-gray-300 p-2 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                        />
+                    </div>
+                    <div className="flex flex-col md:col-span-3">
+                        <label htmlFor="description" className="font-medium text-gray-600 mb-1">Description</label>
+                        <textarea
+                            id="description" name="description" rows="4" value={vehicleData.description}
+                            onChange={handleChange}
+                            className="border border-gray-300 p-2 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                            required
+                        />
+                    </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-xl shadow-lg space-y-4">
+                    <h3 className="text-xl font-semibold text-indigo-700">Images Upload</h3>
+                    <p className="text-sm text-gray-500">Select one or more images to upload with this vehicle.</p>
+                    <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                    />
+                    {images.length > 0 && (
+                        <p className="text-sm text-green-600">Selected {images.length} file(s) for upload.</p>
+                    )}
+                </div>
+
+                <div className="flex justify-end pt-4">
+                    <button
+                        type="submit"
+                        disabled={loading || uploadingImages}
+                        className="flex items-center bg-indigo-600 text-white font-semibold py-3 px-8 rounded-xl shadow-lg hover:bg-indigo-700 transition-colors transform hover:scale-105 disabled:bg-indigo-400"
+                    >
+                        {(loading || uploadingImages) ? (
+                            <>
+                                <LoadingSpinner />
+                                <span className="ml-2">{uploadingImages ? 'Uploading Images...' : 'Posting Vehicle...'}</span>
+                            </>
+                        ) : (
+                            <>
+                                <FaCloudUploadAlt className="w-5 h-5 mr-2" />
+                                Post Vehicle Listing
+                            </>
+                        )}
+                    </button>
+                </div>
+            </form>
+        </div>
+    );
+};
+
+
+const ProfileUpdateContent = ({ dealerData, setDealerData, activeTab, setActiveTab, setFormMessage, formMessage, handleSubmit, handleChange, fetchDealerProfile }) => {
+
+    // Fetch profile data when the component mounts
+    useEffect(() => {
+        fetchDealerProfile();
+    }, [fetchDealerProfile]);
+
+    const renderFormSection = (title, fields, currentData) => (
+        <div className="form-section bg-white p-6 rounded-xl shadow-lg mb-6">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">{title}</h3>
+            <div className="space-y-4">
+                {fields.map(field => (
+                    <div className="flex flex-col sm:flex-row sm:items-center form-row gap-4" key={field.name}>
+                        <label htmlFor={field.name} className="sm:w-1/3 font-medium text-gray-600">{field.label}</label>
+                        <input
+                            type={field.type}
+                            id={field.name}
+                            name={field.name}
+                            value={currentData[field.name] || ''}
+                            onChange={handleChange}
+                            className="flex-1 border border-gray-300 p-2 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+                            required={field.required}
+                        />
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+
+    const renderDocuments = () => (
+        <div className="tab-content">
+            <h3 className="text-2xl font-bold text-gray-800 mb-6">Dealer Documents</h3>
+            <p className="text-gray-600 mb-4">This section would show the status of mandatory dealer verification documents.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 documents-grid">
+                {[
+                    { title: "Trade License", status: "Approved", date: "2024-01-15" },
+                    { title: "Tax Registration", status: "Pending", date: "2024-03-20" },
+                    { title: "Bank Statement", status: "Rejected", date: "2024-05-01" },
+                ].map((doc, index) => (
+                    <div key={index} className="bg-gray-100 p-4 rounded-lg shadow-inner flex justify-between items-center">
+                        <div>
+                            <p className="font-medium text-gray-900">{doc.title}</p>
+                            <p className={`text-sm ${doc.status === 'Approved' ? 'text-green-600' : doc.status === 'Pending' ? 'text-yellow-600' : 'text-red-600'}`}>Status: {doc.status}</p>
+                            <p className="text-xs text-gray-500">Last Update: {doc.date}</p>
+                        </div>
+                        <button className="bg-indigo-500 text-white text-sm py-1 px-3 rounded-full hover:bg-indigo-600 transition-colors">View/Upload</button>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+
+    const renderForm = () => (
+        <div className="tab-content p-4 sm:p-6 bg-white rounded-xl shadow-lg">
+            <h3 className="text-2xl font-bold text-gray-800 mb-6">Update Profile Information</h3>
+
+            {formMessage && (
+                <div className={`p-3 mb-4 rounded-lg text-white font-medium ${formMessage.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
+                    {formMessage.text}
+                </div>
+            )}
+
+            <form onSubmit={handleSubmit}>
+                {renderFormSection("Company & Contact Details", [
+                    { name: "company_name", label: "Company Name", type: "text", required: true },
+                    { name: "email", label: "Email Address", type: "email", required: true },
+                    { name: "phone", label: "Phone Number", type: "tel", required: true },
+                ], dealerData)}
+
+                {renderFormSection("Business Location", [
+                    { name: "address", label: "Street Address", type: "text", required: true },
+                    { name: "city", label: "City", type: "text", required: true },
+                    { name: "state", label: "State/Region", type: "text", required: true },
+                    { name: "country", label: "Country", type: "text", required: true },
+                ], dealerData)}
+
+                <div className="flex justify-end pt-4">
+                    <button
+                        type="submit"
+                        className="bg-indigo-600 text-white font-semibold py-2 px-6 rounded-xl shadow-lg hover:bg-indigo-700 transition-colors transform hover:scale-105"
+                    >
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    );
+
+    return (
+        <div className="dealer-container p-4 sm:p-8 bg-gray-50 min-h-full">
+            <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
+                <header className="dealer-header bg-indigo-700 text-white p-4 sm:p-8 flex flex-col md:flex-row justify-between items-center">
+                    <div className="dealer-identity flex items-center mb-4 md:mb-0">
+                        <div className="w-20 h-20 bg-white text-indigo-700 rounded-full flex items-center justify-center text-4xl mr-4 shadow-lg">
+                            <FaUser />
+                        </div>
+                        <div>
+                            <h2 className="text-3xl font-extrabold">{dealerData.company_name || 'Loading Company...'}</h2>
+                            <p className="text-indigo-200">{dealerData.email || 'N/A'}</p>
+                        </div>
+                    </div>
+                </header>
+
+                <div className="tab-navigation flex border-b border-gray-200 bg-white">
+                    <button
+                        className={`tab-button px-6 py-3 text-sm font-medium transition-colors ${activeTab === 'form' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-indigo-600'}`}
+                        onClick={() => setActiveTab('form')}
+                    >
+                        Contact & Business Info
+                    </button>
+                    <button
+                        className={`tab-button px-6 py-3 text-sm font-medium transition-colors ${activeTab === 'documents' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-indigo-600'}`}
+                        onClick={() => setActiveTab('documents')}
+                    >
+                        Document Status
+                    </button>
+                </div>
+
+                <div className="p-4 sm:p-6">
+                    {activeTab === 'form' ? renderForm() : renderDocuments()}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// --- Main Application Component ---
+
+const App = () => {
+    // --- State Management ---
+    const [activeSection, setActiveSection] = useState('Home');
+    const [dealerData, setDealerData] = useState({});
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [activeTab, setActiveTab] = useState('form');
+    const [formMessage, setFormMessage] = useState(null);
+
+    // Function to fetch dealer data (Memoized for use in useEffect dependency)
+    const fetchDealerProfile = React.useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await axios.get(`${API_BASE_URL}/dealers/dealer-profiles/${DEALER_ID}/`, {
+                headers: { 'X-CSRFTOKEN': CSRF_TOKEN }
+            });
+            setDealerData(response.data);
+        } catch (err) {
+            console.error('Fetch Error:', err.response || err);
+            setError('Failed to load dealer profile. Check console for API details.');
+            // Set minimal default data structure on failure
+            setDealerData({ company_name: 'Dealer', email: 'N/A' });
+        } finally {
+            setLoading(false);
+        }
+    }, []); // Empty dependency array means it only runs on mount
+
+    // --- Profile Update Handlers (for ProfileUpdateContent) ---
+
+    const handleChange = (e) => {
+        setDealerData({ ...dealerData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setFormMessage(null);
+        setLoading(true);
+
+        const formData = new FormData();
+        // Append all fields required by the cURL request to FormData
+        ['company_name', 'address', 'city', 'state', 'country', 'phone', 'email'].forEach(key => {
+             // Only append if the key exists in dealerData to prevent sending 'undefined'
+            if (dealerData[key]) {
+                formData.append(key, dealerData[key]);
+            }
+        });
+
+        try {
+            await axios.put(`${API_BASE_URL}/dealers/dealer-profiles/${DEALER_ID}/`, formData, {
+                headers: {
+                    'X-CSRFTOKEN': CSRF_TOKEN,
+                    'accept': 'application/json',
+                    // axios automatically sets Content-Type to multipart/form-data for FormData
+                },
+            });
+            setFormMessage({ type: 'success', text: 'Profile updated successfully!' });
+            // Re-fetch data to confirm
+            await fetchDealerProfile(); 
+        } catch (err) {
+            const errorDetail = err.response?.data ? JSON.stringify(err.response.data) : err.message;
+            setFormMessage({ type: 'error', text: `Failed to save changes. Error: ${errorDetail}` });
+            console.error('Profile Update Error:', err.response || err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // --- General Handlers ---
+
+    const handleLogout = () => {
+        console.log('Logging out...');
+        // Placeholder for real logout logic
+        setFormMessage({ type: 'success', text: 'You have been logged out (Mock action).' });
+        setTimeout(() => setFormMessage(null), 3000);
+    };
+
+    // --- Content Router ---
+
+    const renderContent = () => {
+        if (loading && activeSection !== 'PostVehicle') return <LoadingSpinner />;
+        
+        switch (activeSection) {
+            case 'Home':
+                return <HomeContent dealerData={dealerData} />;
+            case 'PostVehicle':
+                return <PostVehicleContent />;
+            case 'MyVehicles':
+                return <MyVehiclesContent />;
+            case 'ProfileUpdate':
+                return (
+                    <ProfileUpdateContent
+                        dealerData={dealerData}
+                        setDealerData={setDealerData}
+                        activeTab={activeTab}
+                        setActiveTab={setActiveTab}
+                        formMessage={formMessage}
+                        setFormMessage={setFormMessage}
+                        handleSubmit={handleSubmit}
+                        handleChange={handleChange}
+                        fetchDealerProfile={fetchDealerProfile}
+                    />
+                );
+            default:
+                return <HomeContent dealerData={dealerData} />;
+        }
+    };
+
+    // --- Main Layout ---
+
+    return (
+        <div className="flex h-screen bg-gray-100 font-sans">
+            <style jsx="true">{`
+                /* Simple Scrollbar Styling for aesthetics */
+                ::-webkit-scrollbar { width: 8px; }
+                ::-webkit-scrollbar-track { background: #f1f1f1; }
+                ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+                ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+            `}</style>
+            
+            {/* Sidebar Navigation */}
+            <Sidebar
+                active={activeSection}
+                setActive={setActiveSection}
+                handleLogout={handleLogout}
+            />
+
+            {/* Main Content Area */}
+            <main className="flex-1 overflow-y-auto">
+                {renderContent()}
+            </main>
+        </div>
+    );
+};
+
+export default App;
