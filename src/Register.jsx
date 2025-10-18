@@ -32,9 +32,9 @@ const currencyList = [
 ];
 
 export default function Register() {
-  const [formType, setFormType] = useState('customer');
+  const [formType, setFormType] = useState('user');
   
-  // Common fields
+  // Common fields for both user and dealer
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -50,11 +50,7 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
-  
-  // Customer specific fields
   const [city, setCity] = useState('');
-  
-  // Dealer specific fields
   const [username, setUsername] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [website, setWebsite] = useState('');
@@ -164,48 +160,35 @@ export default function Register() {
 
     const formData = new FormData();
     
-    if (formType === 'customer') {
-      // Customer registration data
-      formData.append('form_type', formType);
-      formData.append('full_name', fullName);
-      formData.append('email', email);
-      formData.append('phone', phoneNumber);
-      formData.append('password', password);
-      formData.append('confirm_password', confirmPassword);
+    // Common fields for both user and dealer
+    formData.append('form_type', formType);
+    formData.append('full_name', fullName);
+    formData.append('email', email);
+    formData.append('phone', phoneNumber);
+    formData.append('password', password);
+    formData.append('confirm_password', confirmPassword);
+    formData.append('country', country);
+    formData.append('state', state);
+    formData.append('city', city);
+    formData.append('address', address);
+    formData.append('zip_code', zipCode);
+    formData.append('language', language);
+    formData.append('currency', currency);
 
-      if (country) formData.append('country', country);
-      if (dob) formData.append('dob', dob);
-      if (state) formData.append('state', state);
-      if (city) formData.append('city', city);
-      if (address) formData.append('address', address);
-      if (zipCode) formData.append('zip_code', zipCode);
-      if (gender) formData.append('gender', gender);
-      if (language) formData.append('language', language);
-      if (currency) formData.append('currency', currency);
-    } else {
-      // Dealer registration data
-      formData.append('username', username);
-      formData.append('email', email);
-      formData.append('password', password);
-      formData.append('company_name', companyName);
-      formData.append('address', address);
-      formData.append('city', city);
-      formData.append('state', state);
-      formData.append('country', country);
-      formData.append('phone', phoneNumber);
-      formData.append('website', website || '');
-      
-      if (idFile) formData.append('id_file', idFile);
-      if (profilePic) formData.append('profile_pic', profilePic);
-    }
+    // Optional fields
+    if (dob) formData.append('dob', dob);
+    if (gender) formData.append('gender', gender);
+    if (username) formData.append('username', username);
+    if (companyName) formData.append('company_name', companyName);
+    if (website) formData.append('website', website);
+    if (idFile) formData.append('id_file', idFile);
+    if (profilePic) formData.append('profile_pic', profilePic);
 
     try {
       console.log('Form Data:', Object.fromEntries(formData));
       
-      // Different API endpoints for customer and dealer
-      const apiUrl = formType === 'customer' 
-        ? 'https://api.b2a2cars.com/api/users/register/'
-        : 'https://api.b2a2cars.com/api/dealers/register/';
+      // Single API endpoint for both user and dealer
+      const apiUrl = 'https://api.b2a2cars.com/api/register/';
       
       // Simulating API call success for demonstration since a real backend isn't available
       await new Promise(resolve => setTimeout(resolve, 500)); 
@@ -518,402 +501,445 @@ export default function Register() {
             font-size: 1.125rem;
             font-weight: 700;
             cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
-            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+            transition: background-color 0.3s, transform 0.2s;
           }
 
           .submit-btn:hover {
             background-color: var(--primary-hover);
+            transform: translateY(-2px);
           }
-          
+
           .submit-btn:active {
-            transform: scale(0.99);
-          }
-          
-          /* --- Divider & Social Login --- */
-          .divider {
-            display: flex;
-            align-items: center;
-            text-align: center;
-            margin: 1.5rem 0;
-            color: #6b7280;
-            font-size: 0.875rem;
+            transform: translateY(0);
           }
 
-          .divider::before, .divider::after {
-            content: '';
-            flex: 1;
-            border-bottom: 1px solid var(--border-color);
-          }
-
-          .divider:not(:empty)::before {
-            margin-right: 0.5em;
-          }
-
-          .divider:not(:empty)::after {
-            margin-left: 0.5em;
-          }
-
+          /* --- Social Login --- */
           .social-login {
+            margin-top: 2rem;
+            text-align: center;
+          }
+
+          .social-login p {
+            color: #6b7280;
+            margin-bottom: 1rem;
+            position: relative;
+          }
+
+          .social-login p::before, .social-login p::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 30%;
+            height: 1px;
+            background-color: var(--border-color);
+          }
+
+          .social-login p::before {
+            left: 0;
+          }
+
+          .social-login p::after {
+            right: 0;
+          }
+
+          .social-buttons {
             display: flex;
+            justify-content: center;
             gap: 1rem;
-            justify-content: space-between;
-            margin-bottom: 1.5rem;
           }
 
           .social-btn {
-            flex-grow: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s, box-shadow 0.2s;
+            padding: 0.75rem;
             border: 1px solid var(--border-color);
-          }
-
-          .social-btn svg {
-            margin-right: 0.5rem;
-            width: 1.2em;
-            height: 1.2em;
-          }
-
-          .social-btn.google {
-            background-color: #fff;
-            color: #4285f4;
-            border-color: #4285f4;
-          }
-
-          .social-btn.facebook {
-            background-color: #1877f2;
-            color: white;
-            border-color: #1877f2;
-          }
-
-          .social-btn.yahoo {
-            background-color: #720e9e;
-            color: white;
-            border-color: #720e9e;
+            border-radius: 8px;
+            background-color: white;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            width: 3.5rem;
+            height: 3.5rem;
           }
 
           .social-btn:hover {
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            background-color: var(--light-gray);
+            transform: translateY(-2px);
           }
-          
+
+          .social-btn svg {
+            width: 1.5rem;
+            height: 1.5rem;
+          }
+
+          .google-btn svg { color: #DB4437; }
+          .facebook-btn svg { color: #4267B2; }
+          .yahoo-btn svg { color: #720e9e; }
+
+          /* --- Login Link --- */
           .login-link {
             text-align: center;
-            font-size: 0.875rem;
+            margin-top: 2rem;
             color: #6b7280;
           }
-          
+
           .login-link a {
             color: var(--primary-color);
             text-decoration: none;
             font-weight: 600;
           }
-          
+
           .login-link a:hover {
             text-decoration: underline;
           }
 
-
-          /* --- Mobile Responsiveness --- */
+          /* --- Responsive --- */
           @media (max-width: 768px) {
-            .register-container {
-              align-items: flex-start;
-              padding: 1rem 0;
-            }
-            
             .register-card {
               padding: 1.5rem;
-              border-radius: 0;
-              box-shadow: none;
-              max-width: 100%;
             }
-
+            
             .form-row {
               flex-direction: column;
               gap: 0;
             }
             
-            .social-login {
-              flex-direction: column;
-              gap: 0.75rem;
-            }
-            
-            .social-btn {
-              padding: 0.6rem 1rem;
+            .social-buttons {
+              flex-wrap: wrap;
             }
           }
         `}
       </style>
-
+      
       <div className="register-container">
         <div className="register-card">
           <div className="form-header">
-            <h2>Create an Account</h2>
-            <div className="form-type-toggle">
-              <button
-                className={`toggle-btn ${formType === 'customer' ? 'active' : ''}`}
-                onClick={() => { setFormType('customer'); setError(''); setSuccessMessage(''); }}
-              >
-                Customer
-              </button>
-              <button
-                className={`toggle-btn ${formType === 'dealer' ? 'active' : ''}`}
-                onClick={() => { setFormType('dealer'); setError(''); setSuccessMessage(''); }}
-              >
-                Dealer
-              </button>
-            </div>
+            <h2>Create Your Account</h2>
           </div>
 
+          {/* Form Type Toggle */}
+          <div className="form-type-toggle">
+            <button 
+              type="button"
+              className={`toggle-btn ${formType === 'user' ? 'active' : ''}`}
+              onClick={() => setFormType('user')}
+            >
+              User Account
+            </button>
+            <button 
+              type="button"
+              className={`toggle-btn ${formType === 'dealer' ? 'active' : ''}`}
+              onClick={() => setFormType('dealer')}
+            >
+              Dealer Account
+            </button>
+          </div>
+
+          {error && <div className="error-message">{error}</div>}
+          {successMessage && <div className="success-message">{successMessage}</div>}
+
           <form onSubmit={handleSubmit}>
-            {/* --- Common Fields --- */}
+            {/* Personal Information */}
             <div className="form-row">
               <div className="form-group required">
-                <label htmlFor="fullName">
-                  {formType === 'customer' ? 'Full Name' : 'Username'}
-                </label>
-                <input 
-                  id="fullName" 
-                  type="text" 
-                  placeholder={formType === 'customer' ? 'John Doe' : 'johndoe123'} 
-                  value={formType === 'customer' ? fullName : username} 
-                  onChange={(e) => formType === 'customer' ? setFullName(e.target.value) : setUsername(e.target.value)} 
-                  required 
+                <label htmlFor="fullName">Full Name</label>
+                <input
+                  type="text"
+                  id="fullName"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
                 />
               </div>
+              
               <div className="form-group required">
-                <label htmlFor="email-address">Email Address</label>
-                <input 
-                  id="email-address" 
-                  type="email" 
-                  placeholder="your@email.com" 
-                  value={email} 
-                  onChange={(e) => setEmail(e.target.value)} 
-                  required 
+                <label htmlFor="email">Email Address</label>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
             </div>
 
-            {formType === 'dealer' && (
+            <div className="form-row">
               <div className="form-group required">
-                <label htmlFor="companyName">Company Name</label>
-                <input 
-                  id="companyName" 
-                  type="text" 
-                  placeholder="Your Company Name" 
-                  value={companyName} 
-                  onChange={(e) => setCompanyName(e.target.value)} 
-                  required 
+                <label htmlFor="phone">Phone Number</label>
+                <div className="input-with-icon">
+                  <FaGlobe />
+                  <input
+                    type="tel"
+                    id="phone"
+                    value={phoneNumber}
+                    onChange={handlePhoneChange}
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="username">Username (Optional)</label>
+                <input
+                  type="text"
+                  id="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                 />
+              </div>
+            </div>
+
+            {/* Company Information (for dealers) */}
+            {formType === 'dealer' && (
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="companyName">Company Name</label>
+                  <input
+                    type="text"
+                    id="companyName"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="website">Website (Optional)</label>
+                  <input
+                    type="url"
+                    id="website"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                  />
+                </div>
               </div>
             )}
 
+            {/* Location Information */}
             <div className="form-row">
               <div className="form-group required">
                 <label htmlFor="country">Country</label>
                 <div className="select-wrapper">
                   <FaGlobe />
-                  <select 
-                    id="country" 
-                    value={country} 
-                    onChange={(e) => setCountry(e.target.value)} 
+                  <select
+                    id="country"
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
                     required
                   >
-                    <option value="">Select your country</option>
-                    {countryList.map((c) => (
-                      <option key={c.code} value={c.name}>{c.name} ({c.dialCode})</option>
+                    <option value="">Select Country</option>
+                    {countryList.map((country) => (
+                      <option key={country.code} value={country.name}>
+                        {country.name}
+                      </option>
                     ))}
                   </select>
                 </div>
               </div>
+              
               <div className="form-group required">
-                <label htmlFor="phone">Phone Number</label>
-                <input 
-                  id="phone" 
-                  type="tel" 
-                  placeholder={countryCode ? `${countryCode} 1234567890` : "+1 1234567890"} 
-                  value={phoneNumber} 
-                  onChange={handlePhoneChange}
-                  required 
+                <label htmlFor="state">State/Province</label>
+                <input
+                  type="text"
+                  id="state"
+                  value={state}
+                  onChange={(e) => setState(e.target.value)}
+                  required
                 />
               </div>
             </div>
 
-            {/* --- Customer Specific Fields --- */}
-            {formType === 'customer' ? (
-              <>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="dob">Date of Birth</label>
-                    <input
-                      type="date"
-                      id="dob"
-                      className="date-picker"
-                      value={dob}
-                      onChange={(e) => setDob(e.target.value)}
-                      max={new Date().toISOString().split("T")[0]}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="gender">Gender</label>
-                    <select id="gender" value={gender} onChange={(e) => setGender(e.target.value)}>
-                      <option value="">Select gender (optional)</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
-                      <option value="prefer_not_to_say">Prefer not to say</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="state">State/Province</label>
-                    <input id="state" type="text" placeholder="California (optional)" value={state} onChange={(e) => setState(e.target.value)} />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="city">City</label>
-                    <input id="city" type="text" placeholder="Los Angeles (optional)" value={city} onChange={(e) => setCity(e.target.value)} />
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="address">Address</label>
-                  <div className="input-with-icon">
-                    <FaMapMarkerAlt />
-                    <input id="address" type="text" placeholder="123 Main St, City (optional)" value={address} onChange={(e) => setAddress(e.target.value)} />
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="zipCode">Zip/Postal Code</label>
-                    <input id="zipCode" type="text" placeholder="90001 (optional)" value={zipCode} onChange={(e) => setZipCode(e.target.value)} />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="language">Language</label>
-                    <select id="language" value={language} onChange={(e) => setLanguage(e.target.value)}>
-                      <option value="en">English</option>
-                      <option value="es">Spanish</option>
-                      <option value="fr">French</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="currency">Currency</label>
-                  <select id="currency" value={currency} onChange={(e) => setCurrency(e.target.value)}>
-                    {currencyList.map((c) => (
-                      <option key={c.code} value={c.code}>{c.code} - {c.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </>
-            ) : ( 
-              // Dealer Specific Fields
-              <>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="state">State/Province</label>
-                    <input id="state" type="text" placeholder="California" value={state} onChange={(e) => setState(e.target.value)} />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="city">City</label>
-                    <input id="city" type="text" placeholder="Los Angeles" value={city} onChange={(e) => setCity(e.target.value)} />
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="address">Business Address</label>
-                  <div className="input-with-icon">
-                    <FaMapMarkerAlt />
-                    <input id="address" type="text" placeholder="123 Business St, City" value={address} onChange={(e) => setAddress(e.target.value)} />
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="website">Website</label>
-                  <input 
-                    id="website" 
-                    type="url" 
-                    placeholder="https://yourcompany.com (optional)" 
-                    value={website} 
-                    onChange={(e) => setWebsite(e.target.value)} 
+            <div className="form-row">
+              <div className="form-group required">
+                <label htmlFor="city">City</label>
+                <div className="input-with-icon">
+                  <FaMapMarkerAlt />
+                  <input
+                    type="text"
+                    id="city"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    required
                   />
                 </div>
+              </div>
+              
+              <div className="form-group required">
+                <label htmlFor="zipCode">ZIP/Postal Code</label>
+                <input
+                  type="text"
+                  id="zipCode"
+                  value={zipCode}
+                  onChange={(e) => setZipCode(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
 
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>ID Document</label>
-                    <div className="file-upload">
-                      <label>
-                        <FaUpload />
-                        <span>{idFile ? idFile.name : 'Choose file...'}</span>
-                        <input type="file" onChange={handleFileChange(setIdFile)} accept=".pdf,.jpg,.jpeg,.png" />
-                      </label>
-                    </div>
-                  </div>
-                  <div className="form-group">
-                    <label>Profile Picture</label>
-                    <div className="file-upload">
-                      <label>
-                        <FaUpload />
-                        <span>{profilePic ? profilePic.name : 'Choose file...'}</span>
-                        <input type="file" onChange={handleFileChange(setProfilePic)} accept=".jpg,.jpeg,.png" />
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
+            <div className="form-group required">
+              <label htmlFor="address">Address</label>
+              <input
+                type="text"
+                id="address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                required
+              />
+            </div>
 
-            {/* --- Password and Submission --- */}
+            {/* Additional Information */}
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="dob">Date of Birth</label>
+                <input
+                  type="date"
+                  id="dob"
+                  value={dob}
+                  onChange={(e) => setDob(e.target.value)}
+                  className="date-picker"
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="gender">Gender</label>
+                <select
+                  id="gender"
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                >
+                  <option value="">Select Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="language">Preferred Language</label>
+                <select
+                  id="language"
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                >
+                  <option value="en">English</option>
+                  <option value="es">Spanish</option>
+                  <option value="fr">French</option>
+                  <option value="de">German</option>
+                  <option value="ja">Japanese</option>
+                </select>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="currency">Preferred Currency</label>
+                <select
+                  id="currency"
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                >
+                  {currencyList.map((curr) => (
+                    <option key={curr.code} value={curr.code}>
+                      {curr.code} - {curr.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Password Fields */}
             <div className="form-row">
               <div className="form-group required">
                 <label htmlFor="password">Password</label>
-                <input id="password" type="password" placeholder="********" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                <input
+                  type="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
               </div>
+              
               <div className="form-group required">
                 <label htmlFor="confirmPassword">Confirm Password</label>
-                <input id="confirmPassword" type="password" placeholder="********" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
               </div>
             </div>
-            
-            <div className="form-group checkbox-group required">
-              <input id="terms-accepted" type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} required />
-              <label htmlFor="terms-accepted">
+
+            {/* File Uploads */}
+            <div className="form-row">
+              <div className="form-group">
+                <label>Profile Picture (Optional)</label>
+                <div className="file-upload">
+                  <label htmlFor="profilePic">
+                    <FaUpload />
+                    <span>{profilePic ? profilePic.name : 'Choose file...'}</span>
+                  </label>
+                  <input
+                    type="file"
+                    id="profilePic"
+                    accept="image/*"
+                    onChange={handleFileChange(setProfilePic)}
+                  />
+                </div>
+              </div>
+              
+              <div className="form-group">
+                <label>ID Document (Optional)</label>
+                <div className="file-upload">
+                  <label htmlFor="idFile">
+                    <FaUpload />
+                    <span>{idFile ? idFile.name : 'Choose file...'}</span>
+                  </label>
+                  <input
+                    type="file"
+                    id="idFile"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={handleFileChange(setIdFile)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Terms and Conditions */}
+            <div className="form-group checkbox-group">
+              <input
+                type="checkbox"
+                id="terms"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                required
+              />
+              <label htmlFor="terms">
                 I agree to the <a href="/terms">Terms and Conditions</a> and <a href="/privacy">Privacy Policy</a>
               </label>
             </div>
 
-            {error && <div className="error-message">{error}</div>}
-            {successMessage && <div className="success-message">{successMessage}</div>}
-
-            <button type="submit" className="submit-btn">Create Account</button>
+            <button type="submit" className="submit-btn">
+              Create {formType === 'dealer' ? 'Dealer' : 'User'} Account
+            </button>
           </form>
 
-          <div className="divider">
-            <span>Or sign up with</span>
-          </div>
-
+          {/* Social Login */}
           <div className="social-login">
-            <button className="social-btn google">
-              <FaGoogle />
-              Google
-            </button>
-            <button className="social-btn facebook">
-              <FaFacebookF />
-              Facebook
-            </button>
-            <button className="social-btn yahoo">
-              <FaYahoo />
-              Yahoo
-            </button>
+            <p>Or sign up with</p>
+            <div className="social-buttons">
+              <button type="button" className="social-btn google-btn">
+                <FaGoogle />
+              </button>
+              <button type="button" className="social-btn facebook-btn">
+                <FaFacebookF />
+              </button>
+              <button type="button" className="social-btn yahoo-btn">
+                <FaYahoo />
+              </button>
+            </div>
           </div>
 
           <div className="login-link">
