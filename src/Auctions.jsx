@@ -47,34 +47,7 @@ const apiCallWithBackoff = async (url, options = {}, retries = 3) => {
 
 // --- Sub-Components ---
 
-const Timer = ({ endTime }) => {
-  const [remaining, setRemaining] = useState(getTimeRemaining(endTime));
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setRemaining(getTimeRemaining(endTime));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [endTime]);
-
-  const { hours, minutes, seconds, expired } = remaining;
-
-  const style = {
-    ...styles.timer,
-    backgroundColor: hours === 0 && minutes < 10 ? '#f87171' : (expired ? '#9ca3af' : '#10b981'),
-  };
-
-  if (expired) {
-    return <div style={style}>Auction Ended</div>;
-  }
-
-  return (
-    <div style={style}>
-      {String(hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')} remaining
-    </div>
-  );
-};
-
+/** Helper to calculate remaining time for the timer component */
 const getTimeRemaining = (endTime) => {
   const total = Date.parse(endTime) - Date.parse(new Date());
   const seconds = Math.floor((total / 1000) % 60);
@@ -90,8 +63,37 @@ const getTimeRemaining = (endTime) => {
   };
 };
 
+const Timer = ({ endTime }) => {
+  const [remaining, setRemaining] = useState(getTimeRemaining(endTime));
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setRemaining(getTimeRemaining(endTime));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [endTime]);
+
+  const { hours, minutes, seconds, expired } = remaining;
+
+  const style = {
+    ...styles.timer,
+    // Highlight in red when close to expiration
+    backgroundColor: hours === 0 && minutes < 10 ? '#f87171' : (expired ? '#9ca3af' : '#10b981'),
+  };
+
+  if (expired) {
+    return <div style={style}>Auction Ended</div>;
+  }
+
+  return (
+    <div style={style}>
+      {String(hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')} remaining
+    </div>
+  );
+};
+
 const VehicleAuctionCard = ({ vehicle, onBidClick, onCardClick }) => {
-  // Assuming vehicle object includes both vehicle and auction details
+  // Assuming vehicle object has ID, Make, Model, Year, and Auction-related fields (auctionId, highestBid, endTime)
   const {
       id: vehicleId,
       make, model, year, color, mileage, image_url,
@@ -101,6 +103,7 @@ const VehicleAuctionCard = ({ vehicle, onBidClick, onCardClick }) => {
   const isExpired = getTimeRemaining(endTime).expired;
 
   return (
+    // Click the card to filter to this specific vehicle
     <div style={styles.card} onClick={() => onCardClick(vehicleId)}>
       <img
         src={image_url || 'https://placehold.co/600x400/94a3b8/FFFFFF?text=No+Image'}
@@ -120,10 +123,11 @@ const VehicleAuctionCard = ({ vehicle, onBidClick, onCardClick }) => {
           <strong>Auction Ends:</strong> {formatDate(endTime)}
         </p>
         <Timer endTime={endTime} />
+        {/* Click the button to navigate to bidding.jsx */}
         <button
           style={{ ...styles.bidButton, ...(isExpired ? styles.bidButtonDisabled : {}) }}
           onClick={(e) => {
-            e.stopPropagation(); // Prevent card click event from firing
+            e.stopPropagation(); // Stop card click handler from firing when clicking button
             onBidClick(auctionId, vehicleId);
           }}
           disabled={isExpired}
@@ -139,6 +143,7 @@ const VehicleAuctionCard = ({ vehicle, onBidClick, onCardClick }) => {
 
 const Auctions = () => {
   const navigate = useNavigate();
+  // useSearchParams allows reading/writing URL query parameters, e.g., ?vehicleId=123
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedVehicleId = searchParams.get('vehicleId');
 
@@ -146,14 +151,18 @@ const Auctions = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Function to fetch all vehicles from the live API
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      // Fetch all auction data from the live API
       const url = `${BASE_API_URL}${VEHICLES_ENDPOINT}`;
       const data = await apiCallWithBackoff(url);
-      setAllAuctions(data || []); // Assuming data is an array of auction objects
+      // Ensure the data is an array before setting state
+      setAllAuctions(Array.isArray(data) ? data : []);
+      if (!Array.isArray(data)) {
+         console.error('API response was not an array:', data);
+      }
     } catch (err) {
       console.error('Failed to fetch auction data from live API:', err);
       setError('Could not load auction data from server. Please check your network or API status.');
@@ -164,23 +173,23 @@ const Auctions = () => {
 
   useEffect(() => {
     fetchData();
-    // Set up a refresh interval to keep bids/times updated
+    // Refresh interval for live data (e.g., bid updates)
     const refreshInterval = setInterval(fetchData, 30000); // Refresh every 30 seconds
     return () => clearInterval(refreshInterval);
   }, [fetchData]);
 
-  // Filter the list based on the URL parameter (selectedVehicleId)
+  // Logic to filter the list: if a vehicleId is in the URL, show only that one.
   const filteredAuctions = useMemo(() => {
     if (!selectedVehicleId) {
       return allAuctions; // Show all
     }
-    // Show only the selected vehicle
+    // Filter to show only the vehicle matching the ID from the URL
     return allAuctions.filter(v => v.id === selectedVehicleId);
   }, [allAuctions, selectedVehicleId]);
 
-  // Handler for Bid Now button
+  // Handler for Bid Now button: redirects to Bidding.jsx
   const handleBidClick = (auctionId, vehicleId) => {
-    // Redirect to Bidding page with auctionId and vehicleId in query params
+    // Crucial step: Use navigate to send IDs to Bidding.jsx via query parameters
     if (auctionId && vehicleId) {
       navigate(`/bidding?auctionId=${auctionId}&vehicleId=${vehicleId}`);
     } else {
@@ -189,14 +198,15 @@ const Auctions = () => {
     }
   };
 
-  // Handler for card click to filter to single vehicle (updates URL)
+  // Handler for card click: sets the vehicleId in the URL to filter the list
   const handleCardClick = (vehicleId) => {
+    // This updates the URL to ?vehicleId=XXX, triggering the useMemo filter
     setSearchParams({ vehicleId });
   };
 
-  // Handler to clear the filter (updates URL)
+  // Handler to clear the filter and show all vehicles
   const handleShowAll = () => {
-    setSearchParams({});
+    setSearchParams({}); // Clear all search parameters
   };
 
   const getPageTitle = useMemo(() => {
@@ -207,16 +217,13 @@ const Auctions = () => {
     return 'Current Vehicle Auctions';
   }, [selectedVehicleId, filteredAuctions]);
 
-  // --- Rendering Logic ---
+  // --- Rendering Logic (Loading, Error, Empty states) ---
 
   if (isLoading) {
     return (
       <div style={styles.container}>
-        <div style={styles.headerContainer}>
-          <h1 style={styles.header}>Loading Live Auctions...</h1>
-        </div>
+        <h1 style={styles.header}>Loading Live Auctions...</h1>
         <div style={styles.grid}>
-          {/* Skeleton Loaders */}
           {Array(4).fill(0).map((_, i) => (
             <div key={i} style={styles.card}>
                 <div style={styles.skeletonImage}></div>
@@ -249,6 +256,7 @@ const Auctions = () => {
     <div style={styles.container}>
       <div style={styles.headerContainer}>
         <h1 style={styles.header}>{getPageTitle}</h1>
+        {/* Only show 'Show All' button when a filter is active */}
         {selectedVehicleId && (
           <button style={styles.showAllButton} onClick={handleShowAll}>
             ← Show All Vehicles
@@ -298,6 +306,7 @@ const styles = {
     alignItems: 'center',
     marginBottom: '2rem',
     flexWrap: 'wrap',
+    gap: '1rem',
   },
   header: {
     fontSize: '2rem',
@@ -332,6 +341,10 @@ const styles = {
     cursor: 'pointer',
     transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
     border: '1px solid #e2e8f0',
+    '&:hover': {
+        transform: 'translateY(-5px)',
+        boxShadow: '0 15px 25px rgba(0, 0, 0, 0.15)',
+    }
   },
   image: {
     width: '100%',
