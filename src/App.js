@@ -16,6 +16,7 @@ import Profile from './Profile';
 import Bidding from './Bidding';
 import UserProfile from './UserProfile';
 import DealerProfile from './DealerProfile';
+import PostVehicle from './PostVehicle';
 
 
 
@@ -39,6 +40,7 @@ function App() {
         <Route path='/Bidding' element={<Bidding/>}/>
         <Route path='/UserProfile' element={<UserProfile/>}/>
         <Route path='/DealerProfile' element={<DealerProfile/>}/>
+        <Route path='/PostVehicle' element={<PostVehicle/>}/>
       </Routes>
     </BrowserRouter>
   );
