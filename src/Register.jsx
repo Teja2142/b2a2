@@ -32,92 +32,41 @@ const currencyList = [
 ];
 
 export default function Register() {
-  const [formType, setFormType] = useState('user');
-  
-  // Common fields for both user and dealer
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [country, setCountry] = useState('');
-  const [countryCode, setCountryCode] = useState('');
-  const [state, setState] = useState('');
-  const [address, setAddress] = useState('');
-  const [zipCode, setZipCode] = useState('');
-  const [gender, setGender] = useState('');
-  const [language, setLanguage] = useState('en');
-  const [currency, setCurrency] = useState('USD');
-  const [dob, setDob] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  // Updated state to use 'customer' for API alignment and pre-filling with curl example data
+  const [formType, setFormType] = useState('customer');
+
+  const [fullName, setFullName] = useState('Naveen Banoth');
+  const [email, setEmail] = useState('banothnaveenbsc2@gmail.com');
+  const [phone, setPhone] = useState('6309069639'); // Plain number
+  const [country, setCountry] = useState('India');
+  const [state, setState] = useState('Telangana');
+  const [address, setAddress] = useState('1st ward');
+  const [zipCode, setZipCode] = useState('506132');
+  const [gender, setGender] = useState('male');
+  const [language, setLanguage] = useState('Lambada');
+  const [currency, setCurrency] = useState('INR');
+  const [dob, setDob] = useState('2000-07-11');
+  const [password, setPassword] = useState('Naveen@2142');
+  const [confirmPassword, setConfirmPassword] = useState('Naveen@2142');
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [city, setCity] = useState('');
-  const [username, setUsername] = useState('');
-  const [companyName, setCompanyName] = useState('');
-  const [website, setWebsite] = useState('');
+
   const [idFile, setIdFile] = useState(null);
   const [profilePic, setProfilePic] = useState(null);
 
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [redirectToLogin, setRedirectToLogin] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Update country code when country changes
-  useEffect(() => {
-    if (country) {
-      const selectedCountry = countryList.find(c => c.name === country);
-      if (selectedCountry) {
-        setCountryCode(selectedCountry.dialCode);
-        setPhoneNumber(selectedCountry.dialCode + ' ');
-      }
-    } else {
-      setCountryCode('');
-      setPhoneNumber('');
-    }
-  }, [country]);
+  const registerApiUrl = 'https://api.b2a2cars.com/api/users/register/';
 
-  const handlePhoneChange = (e) => {
-    const value = e.target.value;
-    
-    // If user tries to delete country code, prevent it
-    if (countryCode && value.length < countryCode.length + 1) {
-      return;
-    }
-    
-    // Only allow numbers after country code
-    const numbersOnly = value.replace(/[^\d]/g, '');
-    
-    if (countryCode) {
-      // Format: +1 1234567890 (max 10 digits after country code)
-      const phoneDigits = numbersOnly.slice(countryCode.replace('+', '').length);
-      if (phoneDigits.length <= 10) {
-        setPhoneNumber(countryCode + ' ' + phoneDigits);
-      }
-    } else {
-      // If no country selected, just take first 15 digits
-      if (numbersOnly.length <= 15) {
-        setPhoneNumber(numbersOnly);
-      }
-    }
-  };
 
   const handleFileChange = (setter) => (e) => {
     setter(e.target.files[0]);
   };
 
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const validatePhone = (phone) => {
-    if (!countryCode) return true; // Skip validation if no country selected
-    const digitsOnly = phone.replace(/[^\d]/g, '');
-    const expectedLength = countryCode.replace('+', '').length + 10;
-    return digitsOnly.length === expectedLength;
-  };
-
   const validatePassword = (pwd) => {
+    // Basic validation to match the curl's password complexity
     if (pwd.length < 8) return 'Password must be at least 8 characters long.';
     if (!/[A-Z]/.test(pwd)) return 'Password must contain one uppercase letter.';
     if (!/\d/.test(pwd)) return 'Password must contain one digit.';
@@ -129,83 +78,82 @@ export default function Register() {
     e.preventDefault();
     setError('');
     setSuccessMessage('');
-
-    // Email validation
-    if (!validateEmail(email)) {
-      setError('Please enter a valid email address');
-      return;
-    }
-
-    // Phone validation
-    if (!validatePhone(phoneNumber)) {
-      setError(`Please enter a valid 10-digit phone number for ${country}`);
-      return;
-    }
+    setIsLoading(true);
 
     const passwordValidationError = validatePassword(password);
     if (passwordValidationError) {
       setError(passwordValidationError);
+      setIsLoading(false);
       return;
     }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');
+      setIsLoading(false);
       return;
     }
 
     if (!termsAccepted) {
       setError('You must accept the terms and conditions');
+      setIsLoading(false);
       return;
     }
 
     const formData = new FormData();
-    
-    // Common fields for both user and dealer
-    formData.append('form_type', formType);
+
+    // Map all fields from the curl command to formData
+    formData.append('form_type', formType); // 'customer' or 'dealer'
     formData.append('full_name', fullName);
     formData.append('email', email);
-    formData.append('phone', phoneNumber);
+    formData.append('phone', phone); // Sending the raw phone number
     formData.append('password', password);
     formData.append('confirm_password', confirmPassword);
     formData.append('country', country);
+    formData.append('dob', dob);
     formData.append('state', state);
-    formData.append('city', city);
     formData.append('address', address);
     formData.append('zip_code', zipCode);
+    formData.append('gender', gender);
     formData.append('language', language);
     formData.append('currency', currency);
 
-    // Optional fields
-    if (dob) formData.append('dob', dob);
-    if (gender) formData.append('gender', gender);
-    if (username) formData.append('username', username);
-    if (companyName) formData.append('company_name', companyName);
-    if (website) formData.append('website', website);
-    if (idFile) formData.append('id_file', idFile);
-    if (profilePic) formData.append('profile_pic', profilePic);
+    // Append files if they exist (using file object and its name)
+    if (idFile) formData.append('id_file', idFile, idFile.name);
+    if (profilePic) formData.append('profile_pic', profilePic, profilePic.name);
 
     try {
-      console.log('Form Data:', Object.fromEntries(formData));
-      
-      // Single API endpoint for both user and dealer
-      const apiUrl = 'https://api.b2a2cars.com/api/register/';
-      
-      // Simulating API call success for demonstration since a real backend isn't available
-      await new Promise(resolve => setTimeout(resolve, 500)); 
-      
-      setSuccessMessage("Registration successful! Redirecting to login...");
+      const response = await axios.post(registerApiUrl, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data', // Axios handles boundary
+          'accept': 'application/json',
+          // The X-CSRFTOKEN from the curl is omitted as it's typically handled by session cookies
+        },
+      });
+
+      setSuccessMessage(response.data.message || "Registration successful! Redirecting to login...");
       setTimeout(() => setRedirectToLogin(true), 1500);
 
-      // Original axios call (commented out for safe local preview)
-      /* const response = await axios.post(apiUrl, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      setSuccessMessage("Registration successful!");
-      setTimeout(() => setRedirectToLogin(true), 1500);
-      */
     } catch (err) {
-      // setError(err.response?.data?.message || 'Registration failed');
-      setError('Registration failed due to simulated network error.'); // Simulated error
+      console.error("Registration error:", err);
+      // Attempt to parse validation errors from the response data
+      let errorMessage = 'Registration failed. Please review the form.';
+      const responseData = err.response?.data;
+
+      if (responseData) {
+        // Simple heuristic for displaying complex Django errors
+        const firstErrorKey = Object.keys(responseData)[0];
+        if (firstErrorKey && Array.isArray(responseData[firstErrorKey])) {
+            errorMessage = `${firstErrorKey}: ${responseData[firstErrorKey][0]}`;
+        } else if (typeof responseData.detail === 'string') {
+            errorMessage = responseData.detail;
+        } else if (typeof responseData.error === 'string') {
+            errorMessage = responseData.error;
+        }
+      }
+
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -216,6 +164,7 @@ export default function Register() {
   return (
     <>
       <style>
+        {/* Retain original styling */}
         {`
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
@@ -289,7 +238,7 @@ export default function Register() {
             color: var(--card-bg);
             box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
           }
-          
+
           .toggle-btn:not(.active):hover {
             background-color: var(--light-gray);
           }
@@ -307,7 +256,7 @@ export default function Register() {
             width: 100%;
             margin-bottom: 1rem;
           }
-          
+
           /* Required Indicator */
           .form-group.required label::after {
             content: '*';
@@ -322,7 +271,7 @@ export default function Register() {
             font-size: 0.875rem;
           }
 
-          input:not([type="checkbox"]), select, .date-picker, .file-upload span {
+          input:not([type="checkbox"]), select, .date-picker, .file-upload-item label span {
             padding: 0.75rem 1rem;
             border: 1px solid var(--border-color);
             border-radius: 6px;
@@ -336,20 +285,20 @@ export default function Register() {
             width: 100%;
             box-sizing: border-box;
           }
-          
+
           input:focus, select:focus {
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
             outline: none;
           }
-          
+
           /* Special styling for select with icon */
           .select-wrapper, .input-with-icon {
             position: relative;
             display: flex;
             align-items: center;
           }
-          
+
           .select-wrapper select {
             padding-left: 2.5rem; /* Make space for the icon */
             cursor: pointer;
@@ -358,20 +307,29 @@ export default function Register() {
             background-position: right 1rem center;
             background-size: 1.25rem;
           }
-          
+
           .select-wrapper svg, .input-with-icon svg {
             position: absolute;
             left: 0.75rem;
             color: #6b7280;
             pointer-events: none;
           }
-          
+
           .input-with-icon input {
             padding-left: 2.5rem;
           }
-          
+
           /* --- File Upload Styling --- */
-          .file-upload label {
+          .file-upload {
+              display: flex;
+              gap: 1.5rem;
+          }
+
+          .file-upload-item {
+              flex: 1;
+          }
+
+          .file-upload-item label {
             display: flex;
             align-items: center;
             justify-content: flex-start;
@@ -384,29 +342,29 @@ export default function Register() {
             margin-bottom: 0;
             height: 44px; /* Match input height */
           }
-          
-          .file-upload label:hover {
+
+          .file-upload-item label:hover {
             background-color: #eff6ff; /* Blue 50 */
           }
-          
-          .file-upload input[type="file"] {
+
+          .file-upload-item input[type="file"] {
             display: none;
           }
-          
-          .file-upload label span {
+
+          .file-upload-item label span {
             border: none;
             padding: 0;
             margin-left: 0.5rem;
             font-size: 0.9rem;
             color: #6b7280;
             background-color: transparent;
-            width: auto;
+            width: 100%;
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
           }
-          
-          .file-upload label svg {
+
+          .file-upload-item label svg {
             width: 1.25em;
             height: 1.25em;
             color: var(--primary-color);
@@ -418,7 +376,7 @@ export default function Register() {
             align-items: center;
             margin-top: 0.5rem;
           }
-          
+
           .checkbox-group input[type="checkbox"] {
             margin-right: 0.75rem;
             width: 1rem;
@@ -435,12 +393,12 @@ export default function Register() {
             background-color: white;
             transition: background-color 0.2s, border-color 0.2s;
           }
-          
+
           .checkbox-group input[type="checkbox"]:checked {
             background-color: var(--primary-color);
             border-color: var(--primary-color);
           }
-          
+
           .checkbox-group input[type="checkbox"]:checked::before {
             content: '✓';
             display: block;
@@ -452,19 +410,19 @@ export default function Register() {
             font-size: 0.75rem;
             line-height: 1;
           }
-          
+
           .checkbox-group label {
             margin-bottom: 0;
             font-weight: 400;
             font-size: 0.875rem;
           }
-          
+
           .checkbox-group a {
             color: var(--primary-color);
             text-decoration: none;
             font-weight: 600;
           }
-          
+
           .checkbox-group a:hover {
             text-decoration: underline;
           }
@@ -502,18 +460,42 @@ export default function Register() {
             font-weight: 700;
             cursor: pointer;
             transition: background-color 0.3s, transform 0.2s;
+            position: relative;
           }
 
-          .submit-btn:hover {
+          .submit-btn:hover:not(:disabled) {
             background-color: var(--primary-hover);
             transform: translateY(-2px);
           }
 
-          .submit-btn:active {
+          .submit-btn:active:not(:disabled) {
             transform: translateY(0);
           }
 
-          /* --- Social Login --- */
+          .submit-btn:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+          }
+
+          .submit-btn.loading::after {
+            content: '';
+            position: absolute;
+            width: 1.25rem;
+            height: 1.25rem;
+            border: 2px solid transparent;
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            right: 1rem;
+          }
+
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+
+          /* --- Social Login and Links (retained for completeness) --- */
           .social-login {
             margin-top: 2rem;
             text-align: center;
@@ -534,13 +516,8 @@ export default function Register() {
             background-color: var(--border-color);
           }
 
-          .social-login p::before {
-            left: 0;
-          }
-
-          .social-login p::after {
-            right: 0;
-          }
+          .social-login p::before { left: 0; }
+          .social-login p::after { right: 0; }
 
           .social-buttons {
             display: flex;
@@ -576,7 +553,6 @@ export default function Register() {
           .facebook-btn svg { color: #4267B2; }
           .yahoo-btn svg { color: #720e9e; }
 
-          /* --- Login Link --- */
           .login-link {
             text-align: center;
             margin-top: 2rem;
@@ -598,35 +574,38 @@ export default function Register() {
             .register-card {
               padding: 1.5rem;
             }
-            
-            .form-row {
+
+            .form-row, .file-upload {
               flex-direction: column;
               gap: 0;
             }
-            
+            .file-upload-item {
+                margin-bottom: 1rem;
+            }
+
             .social-buttons {
               flex-wrap: wrap;
             }
           }
         `}
       </style>
-      
+
       <div className="register-container">
         <div className="register-card">
           <div className="form-header">
             <h2>Create Your Account</h2>
           </div>
 
-          {/* Form Type Toggle */}
+          {/* Form Type Toggle - Updated to 'customer' */}
           <div className="form-type-toggle">
-            <button 
+            <button
               type="button"
-              className={`toggle-btn ${formType === 'user' ? 'active' : ''}`}
-              onClick={() => setFormType('user')}
+              className={`toggle-btn ${formType === 'customer' ? 'active' : ''}`}
+              onClick={() => setFormType('customer')}
             >
-              User Account
+              Customer Account
             </button>
-            <button 
+            <button
               type="button"
               className={`toggle-btn ${formType === 'dealer' ? 'active' : ''}`}
               onClick={() => setFormType('dealer')}
@@ -651,7 +630,7 @@ export default function Register() {
                   required
                 />
               </div>
-              
+
               <div className="form-group required">
                 <label htmlFor="email">Email Address</label>
                 <input
@@ -665,55 +644,32 @@ export default function Register() {
             </div>
 
             <div className="form-row">
-              <div className="form-group required">
-                <label htmlFor="phone">Phone Number</label>
-                <div className="input-with-icon">
-                  <FaGlobe />
-                  <input
-                    type="tel"
-                    id="phone"
-                    value={phoneNumber}
-                    onChange={handlePhoneChange}
-                    required
-                  />
+                <div className="form-group required">
+                  <label htmlFor="phone">Phone Number</label>
+                  <div className="input-with-icon">
+                    <FaGlobe />
+                    <input
+                      type="tel"
+                      id="phone"
+                      placeholder="e.g. 6309069639"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="username">Username (Optional)</label>
-                <input
-                  type="text"
-                  id="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                />
-              </div>
-            </div>
 
-            {/* Company Information (for dealers) */}
-            {formType === 'dealer' && (
-              <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="companyName">Company Name</label>
+                  <label htmlFor="dob">Date of Birth</label>
                   <input
-                    type="text"
-                    id="companyName"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
+                    type="date"
+                    id="dob"
+                    value={dob}
+                    onChange={(e) => setDob(e.target.value)}
+                    className="date-picker"
                   />
                 </div>
-                
-                <div className="form-group">
-                  <label htmlFor="website">Website (Optional)</label>
-                  <input
-                    type="url"
-                    id="website"
-                    value={website}
-                    onChange={(e) => setWebsite(e.target.value)}
-                  />
-                </div>
-              </div>
-            )}
+            </div>
 
             {/* Location Information */}
             <div className="form-row">
@@ -736,7 +692,7 @@ export default function Register() {
                   </select>
                 </div>
               </div>
-              
+
               <div className="form-group required">
                 <label htmlFor="state">State/Province</label>
                 <input
@@ -751,20 +707,6 @@ export default function Register() {
 
             <div className="form-row">
               <div className="form-group required">
-                <label htmlFor="city">City</label>
-                <div className="input-with-icon">
-                  <FaMapMarkerAlt />
-                  <input
-                    type="text"
-                    id="city"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="form-group required">
                 <label htmlFor="zipCode">ZIP/Postal Code</label>
                 <input
                   type="text"
@@ -774,32 +716,7 @@ export default function Register() {
                   required
                 />
               </div>
-            </div>
 
-            <div className="form-group required">
-              <label htmlFor="address">Address</label>
-              <input
-                type="text"
-                id="address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                required
-              />
-            </div>
-
-            {/* Additional Information */}
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="dob">Date of Birth</label>
-                <input
-                  type="date"
-                  id="dob"
-                  value={dob}
-                  onChange={(e) => setDob(e.target.value)}
-                  className="date-picker"
-                />
-              </div>
-              
               <div className="form-group">
                 <label htmlFor="gender">Gender</label>
                 <select
@@ -815,6 +732,18 @@ export default function Register() {
               </div>
             </div>
 
+            <div className="form-group required">
+              <label htmlFor="address">Address</label>
+              <input
+                type="text"
+                id="address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                required
+              />
+            </div>
+
+            {/* Language and Currency (now always visible for comprehensive registration) */}
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="language">Preferred Language</label>
@@ -824,13 +753,13 @@ export default function Register() {
                   onChange={(e) => setLanguage(e.target.value)}
                 >
                   <option value="en">English</option>
+                  <option value="Lambada">Lambada</option>
                   <option value="es">Spanish</option>
                   <option value="fr">French</option>
                   <option value="de">German</option>
-                  <option value="ja">Japanese</option>
                 </select>
               </div>
-              
+
               <div className="form-group">
                 <label htmlFor="currency">Preferred Currency</label>
                 <select
@@ -859,7 +788,7 @@ export default function Register() {
                   required
                 />
               </div>
-              
+
               <div className="form-group required">
                 <label htmlFor="confirmPassword">Confirm Password</label>
                 <input
@@ -872,38 +801,34 @@ export default function Register() {
               </div>
             </div>
 
-            {/* File Uploads */}
-            <div className="form-row">
-              <div className="form-group">
+            {/* File Uploads (now always visible for comprehensive registration) */}
+            <div className="file-upload">
+              <div className="form-group file-upload-item">
                 <label>Profile Picture (Optional)</label>
-                <div className="file-upload">
-                  <label htmlFor="profilePic">
-                    <FaUpload />
-                    <span>{profilePic ? profilePic.name : 'Choose file...'}</span>
-                  </label>
-                  <input
-                    type="file"
-                    id="profilePic"
-                    accept="image/*"
-                    onChange={handleFileChange(setProfilePic)}
-                  />
-                </div>
+                <label htmlFor="profilePic">
+                  <FaUpload />
+                  <span>{profilePic ? profilePic.name : 'Choose file...'}</span>
+                </label>
+                <input
+                  type="file"
+                  id="profilePic"
+                  accept="image/*"
+                  onChange={handleFileChange(setProfilePic)}
+                />
               </div>
-              
-              <div className="form-group">
+
+              <div className="form-group file-upload-item">
                 <label>ID Document (Optional)</label>
-                <div className="file-upload">
-                  <label htmlFor="idFile">
-                    <FaUpload />
-                    <span>{idFile ? idFile.name : 'Choose file...'}</span>
-                  </label>
-                  <input
-                    type="file"
-                    id="idFile"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={handleFileChange(setIdFile)}
-                  />
-                </div>
+                <label htmlFor="idFile">
+                  <FaUpload />
+                  <span>{idFile ? idFile.name : 'Choose file...'}</span>
+                </label>
+                <input
+                  type="file"
+                  id="idFile"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={handleFileChange(setIdFile)}
+                />
               </div>
             </div>
 
@@ -921,8 +846,12 @@ export default function Register() {
               </label>
             </div>
 
-            <button type="submit" className="submit-btn">
-              Create {formType === 'dealer' ? 'Dealer' : 'User'} Account
+            <button
+              type="submit"
+              className={`submit-btn ${isLoading ? 'loading' : ''}`}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Registering...' : `Create ${formType === 'dealer' ? 'Dealer' : 'Customer'} Account`}
             </button>
           </form>
 

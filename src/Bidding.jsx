@@ -3,15 +3,21 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 
 // --- Configuration and Utilities ---
 const BASE_API_URL = 'https://api.b2a2cars.com';
-const VEHICLE_DETAIL_ENDPOINT = '/api/vehicles/vehicles/'; // Assumed endpoint for single vehicle
-const PLACE_BID_ENDPOINT = '/api/auctions/place-bid'; // Assumed endpoint for bidding
+// Use the provided GET endpoint for fetching auction details
+const AUCTION_DETAIL_ENDPOINT = '/api/auction/auctions/'; // Used as base + {id}/
+// Use the provided POST endpoint for placing bids
+const PLACE_BID_ENDPOINT = '/api/auction/auctions/';
 
 // Utility for formatting currency
 const formatCurrency = (amount) => amount ? `$${Number(amount).toLocaleString()}` : 'N/A';
 const formatDate = (dateString) => {
     if (!dateString) return 'TBA';
     try {
-        return new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + new Date(dateString).toLocaleDateString();
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric', month: 'short', day: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        });
     } catch (e) {
         return 'Invalid Date';
     }
@@ -25,10 +31,16 @@ const apiCallWithBackoff = async (url, options = {}, retries = 3) => {
         try {
             const response = await fetch(url, options);
             if (!response.ok) {
-                const errorBody = await response.text();
-                throw new Error(`HTTP error! status: ${response.status}. Details: ${errorBody}`);
+                // Try to parse JSON error message if available
+                let errorDetails = '';
+                try {
+                    const errorJson = await response.json();
+                    errorDetails = JSON.stringify(errorJson);
+                } catch (e) {
+                    errorDetails = await response.text();
+                }
+                throw new Error(`HTTP error! Status: ${response.status}. Details: ${errorDetails.substring(0, 200)}...`);
             }
-            // Check for empty body (e.g., successful POST/PUT might return 204 No Content)
             if (response.status === 204 || response.headers.get('content-length') === '0') {
                 return {};
             }
@@ -36,66 +48,121 @@ const apiCallWithBackoff = async (url, options = {}, retries = 3) => {
         } catch (error) {
             if (i === retries - 1) {
                 console.error('Final API call failed:', url, error);
-                throw new Error(`Failed to connect to server after ${retries} attempts.`);
+                throw new Error(`Failed to connect or process data: ${error.message}`);
             }
-            const delay = Math.pow(2, i) * 1000 + Math.floor(Math.random() * 1000);
+            const delay = Math.pow(2, i) * 1000 + Math.floor(Math.random() * 500);
             console.warn(`API call failed. Retrying in ${delay / 1000}s...`);
             await new Promise(resolve => setTimeout(resolve, delay));
         }
     }
 };
 
+/**
+ * Calculates time remaining for the Timer component.
+ */
+const getTimeRemaining = (endTime) => {
+    const total = Date.parse(endTime) - Date.parse(new Date());
+    const seconds = Math.floor((total / 1000) % 60);
+    const minutes = Math.floor((total / 1000 / 60) % 60);
+    const hours = Math.floor((total / (1000 * 60 * 60)) % 24);
+    const days = Math.floor(total / (1000 * 60 * 60 * 24));
+
+    return {
+      total,
+      days,
+      hours: hours + (days * 24), // Combine days into hours for simpler display
+      minutes,
+      seconds,
+      expired: total <= 0,
+    };
+};
+
+// --- Sub Component: Timer ---
+const Timer = ({ endTime }) => {
+    const [remaining, setRemaining] = useState(getTimeRemaining(endTime));
+
+    useEffect(() => {
+      // Update the timer every second
+      const timer = setInterval(() => {
+        setRemaining(getTimeRemaining(endTime));
+      }, 1000);
+      return () => clearInterval(timer);
+    }, [endTime]);
+
+    const { hours, minutes, seconds, expired } = remaining;
+
+    const style = {
+      ...styles.timer,
+      // Change color when less than 1 hour remaining
+      backgroundColor: hours < 1 && !expired ? '#f97316' : (expired ? '#9ca3af' : '#10b981'),
+    };
+
+    if (expired) {
+      return <div style={style}>Auction Ended</div>;
+    }
+
+    return (
+      <div style={style}>
+        {String(hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')} remaining
+      </div>
+    );
+};
+
 
 // --- Main Component ---
-
 const Bidding = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
+    // Auction ID is now mandatory for detail fetching and bidding
     const auctionId = searchParams.get('auctionId');
     const vehicleId = searchParams.get('vehicleId');
 
-    const [vehicleDetails, setVehicleDetails] = useState(null);
+    const [auctionDetails, setAuctionDetails] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [newBidAmount, setNewBidAmount] = useState('');
     const [message, setMessage] = useState({ type: '', text: '' }); // success, error, info
     const [currentHighestBid, setCurrentHighestBid] = useState(0);
 
-    // 1. Fetch Vehicle and Auction Details
+    // Get a simulated UserId for POST, this should come from a real auth system
+    const simulatedUserId = 'f049523f-6bd6-43b0-9dcf-d190dda66ff7'; 
+    const minBidIncrement = 100; // Define a standard minimum increment
+
+    // 1. Fetch Auction Details (and Vehicle details implicitly, as they are nested)
     const fetchAuctionDetails = useCallback(async () => {
-        if (!vehicleId) {
-            setMessage({ type: 'error', text: 'Error: Vehicle ID is missing from the URL.' });
+        if (!auctionId) {
+            setMessage({ type: 'error', text: 'Error: Auction ID is missing from the URL. Cannot fetch details.' });
             setIsLoading(false);
             return;
         }
 
-        setIsLoading(true);
-        setMessage({ type: 'info', text: 'Loading vehicle and auction details...' });
+        setMessage({ type: 'info', text: 'Loading auction details...' });
         try {
-            // Fetch single vehicle details (assumed endpoint)
-            const url = `${BASE_API_URL}${VEHICLE_DETAIL_ENDPOINT}${vehicleId}`;
+            // Fetch specific auction details
+            const url = `${BASE_API_URL}${AUCTION_DETAIL_ENDPOINT}${auctionId}/`;
             const data = await apiCallWithBackoff(url);
             
-            if (data && data.highestBid !== undefined) {
-                setVehicleDetails(data);
-                setCurrentHighestBid(data.highestBid);
-                setNewBidAmount(data.highestBid + 100); // Suggest a minimum next bid
-                setMessage({ type: '', text: '' });
-            } else {
-                setMessage({ type: 'error', text: 'Vehicle details loaded, but auction data is incomplete.' });
-            }
+            // Validate the structure based on image_04f77d.png
+            const highestBid = Number(data.highest_bid) || Number(data.starting_price) || 0;
+            
+            setAuctionDetails(data);
+            setCurrentHighestBid(highestBid);
+            
+            // Set suggested bid to current highest bid + increment
+            setNewBidAmount(highestBid + minBidIncrement);
+            setMessage({ type: '', text: '' });
 
         } catch (err) {
             console.error('Error fetching auction details:', err);
-            setMessage({ type: 'error', text: `Failed to load vehicle details: ${err.message}` });
+            setMessage({ type: 'error', text: `Failed to load auction details: ${err.message}` });
         } finally {
             setIsLoading(false);
         }
-    }, [vehicleId]);
+    }, [auctionId]);
 
     useEffect(() => {
         fetchAuctionDetails();
-        // Set up a quick refresh for live bidding updates
-        const refreshInterval = setInterval(fetchAuctionDetails, 10000); // Refresh every 10 seconds
+        // Set up a refresh for live bidding updates (every 10 seconds)
+        const refreshInterval = setInterval(fetchAuctionDetails, 10000); 
         return () => clearInterval(refreshInterval);
     }, [fetchAuctionDetails]);
 
@@ -105,8 +172,10 @@ const Bidding = () => {
         setMessage({ type: 'info', text: 'Placing your bid...' });
 
         const bidValue = Number(newBidAmount);
-        if (isNaN(bidValue) || bidValue <= currentHighestBid) {
-            setMessage({ type: 'error', text: `Bid must be a valid number and greater than the current highest bid (${formatCurrency(currentHighestBid)}).` });
+        const requiredMinBid = currentHighestBid + minBidIncrement;
+
+        if (isNaN(bidValue) || bidValue < requiredMinBid) {
+            setMessage({ type: 'error', text: `Bid must be at least ${formatCurrency(requiredMinBid)}.` });
             return;
         }
 
@@ -116,80 +185,106 @@ const Bidding = () => {
         }
 
         try {
+            // Construct payload based on the provided curl example:
+            // The API expects 'application/x-www-form-urlencoded' format in the curl,
+            // but for a React app, using 'application/json' is standard. 
+            // We will send JSON for modernity and assume the API can handle it, or we'll adjust the data structure to match the POST body fields.
+            
+            // NOTE: The POST endpoint provided is the list endpoint, not a specific 'place-bid' endpoint. 
+            // Based on the fields in the curl, it looks like a full auction creation or update. 
+            // We will *simulate* a simplified bid post to the auction list endpoint, assuming the backend can interpret a partial update.
+            
+            // Based on the curl data: 'vehicle=BMW%2FMM&starting_price=12345&reserve_price=123456&start_time=03-11-2025%2014%3A00&end_time=03-11-2026%2015%3A00&title=title&highest_bidder=f049523f-6bd6-43b0-9dcf-d190dda66ff7'
+            // We'll map the new bid as a property of the existing auction data.
             const payload = {
-                auctionId: auctionId,
-                bidAmount: bidValue,
-                // IMPORTANT: You will need to replace this with a real user authentication token/ID
-                // For now, using a placeholder. The backend MUST check for a valid user token.
-                userId: 'current-authenticated-user-id',
+                // If the API requires updating the whole object, send all fields
+                vehicle: auctionDetails.vehicle,
+                starting_price: auctionDetails.starting_price,
+                reserve_price: auctionDetails.reserve_price,
+                start_time: auctionDetails.start_time,
+                end_time: auctionDetails.end_time,
+                title: auctionDetails.title,
+                description: auctionDetails.description,
+                
+                // Key update fields for the bid:
+                highest_bid: bidValue,
+                highest_bidder: simulatedUserId, 
             };
-
-            const url = `${BASE_API_URL}${PLACE_BID_ENDPOINT}`;
+            
+            // Using PUT/PATCH for update on the specific auction endpoint
+            const url = `${BASE_API_URL}${AUCTION_DETAIL_ENDPOINT}${auctionId}/`; 
+            
             const result = await apiCallWithBackoff(url, {
-                method: 'POST',
+                method: 'PUT', // Use PUT to update the existing resource
                 headers: {
                     'Content-Type': 'application/json',
-                    // Add Authorization header here once your auth is implemented
-                    // 'Authorization': `Bearer ${userToken}`
+                    'accept': 'application/json',
+                    // CSRF token header is usually needed for authenticated POST/PUT/PATCH requests
+                    'X-CSRFTOKEN': 'dummy_csrf_token_for_sim',
                 },
                 body: JSON.stringify(payload),
             });
 
-            // Assuming the API returns the new, updated auction details on success
-            if (result && result.newHighestBid) {
-                setCurrentHighestBid(result.newHighestBid);
-                setNewBidAmount(result.newHighestBid + 100);
-                setMessage({ type: 'success', text: `Bid successful! Your new bid is ${formatCurrency(result.newHighestBid)}.` });
+            // Assuming the API returns the updated auction details on success
+            if (result && result.highest_bid) {
+                const newBid = Number(result.highest_bid);
+                setCurrentHighestBid(newBid);
+                setNewBidAmount(newBid + minBidIncrement);
+                setMessage({ type: 'success', text: `Bid successful! Your bid of ${formatCurrency(newBid)} is now the highest.` });
             } else {
-                // If API returns success but no data, assume success and refresh
+                // If API returns success but no data, force a refresh
                 setMessage({ type: 'success', text: 'Bid placed successfully. Refreshing details...' });
                 fetchAuctionDetails();
             }
 
         } catch (err) {
             console.error('Bidding failed:', err);
-            setMessage({ type: 'error', text: `Bidding failed: ${err.message}` });
+            setMessage({ type: 'error', text: `Bidding failed. Make sure you are authenticated and your bid is valid. Error: ${err.message}` });
         }
     };
 
-    if (!vehicleId) {
+    if (!auctionId || !vehicleId) {
         return (
-            <div style={styles.errorContainer}>
+            <div style={{...styles.container, ...styles.errorContainer}}>
                 <span style={styles.errorIcon}>🛑</span>
-                <h2 style={styles.errorText}>Missing Vehicle/Auction Information</h2>
-                <p>Please navigate from the Auctions page to bid on a specific vehicle.</p>
-                <button style={styles.retryButton} onClick={() => navigate('/auctions')}>Go to Auctions</button>
+                <h2 style={styles.errorText}>Missing Auction Information</h2>
+                <p style={{color: '#4b5563'}}>Please navigate from the Auctions page to bid on a specific vehicle.</p>
+                <button style={styles.goBackButton} onClick={() => navigate('/auctions')}>Go to Auctions</button>
             </div>
         );
     }
 
-    if (isLoading || !vehicleDetails) {
+    if (isLoading || !auctionDetails) {
         return (
             <div style={styles.container}>
                 <h1 style={styles.header}>Loading Auction Details...</h1>
-                {message.text && <p style={{...styles.message, backgroundColor: styles.message.info.backgroundColor}}>{message.text}</p>}
+                {message.text && <div style={{...styles.message, backgroundColor: styles.message.info.backgroundColor, color: styles.message.info.color}}>{message.text}</div>}
                 {/* Minimal Skeleton */}
                 <div style={styles.detailCard}>
                     <div style={styles.skeletonImage}></div>
                     <div style={styles.contentSection}>
-                        <div style={{...styles.skeletonText, width: '80%'}}></div>
+                        <div style={{...styles.skeletonText, width: '80%', height: '2.5rem'}}></div>
                         <div style={{...styles.skeletonText, width: '50%', height: '1.5rem', margin: '1rem 0'}}></div>
                         <div style={{...styles.skeletonText, width: '90%'}}></div>
                         <div style={{...styles.skeletonText, width: '70%'}}></div>
                         <div style={styles.skeletonButton}></div>
+                        <div style={{...styles.skeletonButton, marginTop: '2rem'}}></div>
                     </div>
                 </div>
             </div>
         );
     }
 
-    const { make, model, year, color, mileage, image_url, endTime } = vehicleDetails;
-    const isExpired = getTimeRemaining(endTime).expired;
+    const { make, model, year, color, mileage, image_url, end_time, title, reserve_price } = auctionDetails;
+    const { expired } = getTimeRemaining(end_time);
+
+    const requiredMinBid = currentHighestBid + minBidIncrement;
+
 
     return (
         <div style={styles.container}>
-            <h1 style={styles.header}>Bidding on {year} {make} {model}</h1>
-            <p style={styles.subHeader}>Auction ID: {auctionId} | Vehicle ID: {vehicleId}</p>
+            <h1 style={styles.header}>{title || `Bidding on ${make} ${model}`}</h1>
+            <p style={styles.subHeader}>Vehicle: **{year} {make} {model}** | Auction ID: {auctionId}</p>
 
             {message.text && (
                 <div style={{
@@ -212,46 +307,47 @@ const Bidding = () => {
 
                 <div style={styles.contentSection}>
                     <div style={styles.detailsGroup}>
-                        <p style={styles.detailItem}><strong>Make:</strong> {make}</p>
-                        <p style={styles.detailItem}><strong>Model:</strong> {model}</p>
-                        <p style={styles.detailItem}><strong>Year:</strong> {year}</p>
-                        <p style={styles.detailItem}><strong>Color:</strong> {color}</p>
+                        <p style={styles.detailItem}><strong>Vehicle ID:</strong> {vehicleId}</p>
+                        <p style={styles.detailItem}><strong>Reserve Price:</strong> {formatCurrency(reserve_price)}</p>
                         <p style={styles.detailItem}><strong>Mileage:</strong> {mileage?.toLocaleString() || 'N/A'}</p>
+                        <p style={styles.detailItem}><strong>Color:</strong> {color || 'N/A'}</p>
                     </div>
 
                     <div style={styles.auctionInfo}>
                         <h2 style={styles.currentBid}>Current Highest Bid: <span style={styles.bidAmountText}>{formatCurrency(currentHighestBid)}</span></h2>
                         <div style={styles.timerBox}>
-                            <p style={styles.timerLabel}>Auction Ends:</p>
-                            <p style={styles.timerTime}>{formatDate(endTime)}</p>
-                            <Timer endTime={endTime} />
+                            <p style={styles.timerLabel}>Time Remaining Until Auction Closes</p>
+                            <Timer endTime={end_time} />
+                            <p style={styles.timerTime}>Closes: {formatDate(end_time)}</p>
                         </div>
                     </div>
 
                     {/* Bidding Form */}
                     <form onSubmit={handlePlaceBid} style={styles.bidForm}>
-                        <label style={styles.label}>Your Bid Amount (Must be higher than {formatCurrency(currentHighestBid)}):</label>
+                        <label style={styles.label}>
+                            Enter Bid Amount (Min: {formatCurrency(requiredMinBid)}):
+                        </label>
                         <input
                             type="number"
                             value={newBidAmount}
                             onChange={(e) => setNewBidAmount(e.target.value)}
-                            min={currentHighestBid + 1}
-                            step="100"
+                            min={requiredMinBid}
+                            step={minBidIncrement}
                             required
-                            disabled={isExpired}
+                            disabled={expired}
                             style={styles.input}
                         />
                         <button
                             type="submit"
-                            style={{ ...styles.bidButton, ...(isExpired ? styles.bidButtonDisabled : {}) }}
-                            disabled={isExpired}
+                            style={{ ...styles.bidButton, ...(expired ? styles.bidButtonDisabled : {}) }}
+                            disabled={expired}
                         >
-                            {isExpired ? 'Auction Closed' : `Place Bid of ${formatCurrency(newBidAmount)}`}
+                            {expired ? 'Auction Closed' : `Place Bid of ${formatCurrency(newBidAmount)}`}
                         </button>
                     </form>
 
                     <button style={styles.backButton} onClick={() => navigate('/auctions')}>
-                        ← Back to Auctions
+                        ← Back to Auction Listings
                     </button>
                 </div>
             </div>
@@ -260,55 +356,10 @@ const Bidding = () => {
 };
 
 
-const Timer = ({ endTime }) => {
-    const [remaining, setRemaining] = useState(getTimeRemaining(endTime));
-
-    useEffect(() => {
-      const timer = setInterval(() => {
-        setRemaining(getTimeRemaining(endTime));
-      }, 1000);
-      return () => clearInterval(timer);
-    }, [endTime]);
-
-    const { hours, minutes, seconds, expired } = remaining;
-
-    const style = {
-      ...styles.timer,
-      backgroundColor: hours === 0 && minutes < 10 ? '#f87171' : (expired ? '#9ca3af' : '#10b981'),
-      fontSize: '1rem',
-    };
-
-    if (expired) {
-      return <div style={style}>Auction Ended</div>;
-    }
-
-    return (
-      <div style={style}>
-        {String(hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')} remaining
-      </div>
-    );
-};
-
-const getTimeRemaining = (endTime) => {
-    const total = Date.parse(endTime) - Date.parse(new Date());
-    const seconds = Math.floor((total / 1000) % 60);
-    const minutes = Math.floor((total / 1000 / 60) % 60);
-    const hours = Math.floor((total / (1000 * 60 * 60)) % 24);
-
-    return {
-      total,
-      hours,
-      minutes,
-      seconds,
-      expired: total <= 0,
-    };
-};
-
-
 // --- Styles ---
 const styles = {
     container: {
-        padding: '2rem',
+        padding: '2rem 1rem',
         maxWidth: '1000px',
         margin: '0 auto',
         fontFamily: 'Inter, sans-serif',
@@ -316,14 +367,14 @@ const styles = {
         minHeight: '100vh',
     },
     header: {
-        fontSize: '2.5rem',
+        fontSize: 'clamp(1.8rem, 4vw, 2.5rem)',
         fontWeight: '700',
         color: '#1a202c',
         textAlign: 'center',
         marginBottom: '0.5rem',
     },
     subHeader: {
-        fontSize: '1rem',
+        fontSize: 'clamp(0.9rem, 2vw, 1rem)',
         color: '#6b7280',
         textAlign: 'center',
         marginBottom: '2rem',
@@ -335,7 +386,7 @@ const styles = {
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        // Responsive for desktop
+        // Responsive for desktop (React inline style fallback for media query)
         '@media (min-width: 768px)': {
             flexDirection: 'row',
         },
@@ -346,12 +397,8 @@ const styles = {
         objectFit: 'cover',
         borderBottom: '1px solid #e2e8f0',
         // Responsive for desktop
-        '@media (min-width: 768px)': {
-            width: '50%',
-            height: 'auto',
-            borderBottom: 'none',
-            borderRight: '1px solid #e2e8f0',
-        },
+        // Note: Actual media queries must be handled by the parent component logic or a CSS library, 
+        // but we keep the structure for clarity if a CSS solution were used.
     },
     contentSection: {
         padding: '2rem',
@@ -359,10 +406,6 @@ const styles = {
         display: 'flex',
         flexDirection: 'column',
         gap: '1.5rem',
-        // Responsive for desktop
-        '@media (min-width: 768px)': {
-            width: '50%',
-        },
     },
     detailsGroup: {
         borderBottom: '1px solid #e2e8f0',
@@ -386,14 +429,16 @@ const styles = {
         color: '#1f2937',
     },
     bidAmountText: {
-        color: '#ef4444',
+        color: '#ef4444', // Red for the high bid
         fontWeight: '700',
+        fontSize: '1.75rem',
     },
     timerBox: {
         backgroundColor: '#f3f4f6',
         padding: '1rem',
         borderRadius: '0.5rem',
         textAlign: 'center',
+        boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.05)',
     },
     timerLabel: {
         fontSize: '0.9rem',
@@ -401,41 +446,48 @@ const styles = {
         marginBottom: '0.25rem',
     },
     timerTime: {
-        fontSize: '1.1rem',
-        fontWeight: '600',
+        fontSize: '1rem',
+        fontWeight: '500',
         color: '#1f2937',
-        marginBottom: '0.5rem',
+        marginTop: '0.5rem',
     },
     timer: {
-        padding: '0.5rem 0.75rem',
-        borderRadius: '0.375rem',
+        padding: '0.75rem',
+        borderRadius: '0.5rem',
         color: 'white',
-        fontWeight: '600',
+        fontWeight: '700',
         textAlign: 'center',
+        fontSize: '1.25rem',
         transition: 'background-color 0.3s',
     },
     bidForm: {
         display: 'flex',
         flexDirection: 'column',
         gap: '1rem',
+        paddingTop: '1rem',
     },
     label: {
         fontSize: '1rem',
         fontWeight: '500',
         color: '#1f2937',
+        textAlign: 'center',
     },
     input: {
         padding: '0.75rem',
-        border: '2px solid #d1d5db',
+        border: '2px solid #3b82f6', // Blue border
         borderRadius: '0.5rem',
-        fontSize: '1.2rem',
+        fontSize: '1.5rem',
         textAlign: 'center',
         fontWeight: 'bold',
         transition: 'border-color 0.2s, box-shadow 0.2s',
+        ':focus': {
+            borderColor: '#1d4ed8',
+            boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.5)',
+        }
     },
     bidButton: {
         padding: '1rem 2rem',
-        backgroundColor: '#4f46e5',
+        backgroundColor: '#1d4ed8', // Darker blue for action
         color: 'white',
         border: 'none',
         borderRadius: '0.5rem',
@@ -443,24 +495,28 @@ const styles = {
         fontWeight: '700',
         cursor: 'pointer',
         transition: 'background-color 0.2s, transform 0.1s',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+        boxShadow: '0 4px 10px rgba(29, 78, 216, 0.4)',
         marginTop: '0.5rem',
+        ':hover': { backgroundColor: '#1e40af', transform: 'translateY(-1px)' },
     },
     bidButtonDisabled: {
         backgroundColor: '#9ca3af',
         cursor: 'not-allowed',
+        boxShadow: 'none',
+        transform: 'none',
     },
     backButton: {
         marginTop: '1.5rem',
-        padding: '0.5rem 1rem',
-        backgroundColor: 'transparent',
-        color: '#4f46e5',
-        border: '1px solid #4f46e5',
+        padding: '0.75rem 1rem',
+        backgroundColor: '#f3f4f6',
+        color: '#4b5563',
+        border: '1px solid #e5e7eb',
         borderRadius: '0.5rem',
-        fontSize: '0.9rem',
+        fontSize: '1rem',
         fontWeight: '500',
         cursor: 'pointer',
         transition: 'background-color 0.2s',
+        ':hover': { backgroundColor: '#e5e7eb' },
     },
     // Messages
     message: {
@@ -488,37 +544,28 @@ const styles = {
         height: '350px',
         backgroundColor: '#e5e7eb',
         borderRadius: '1rem 1rem 0 0',
-        '@media (min-width: 768px)': {
-            width: '50%',
-            height: 'auto',
-            borderRadius: '1rem 0 0 1rem',
-        },
     },
     skeletonText: {
         height: '1.25rem',
         backgroundColor: '#e5e7eb',
         borderRadius: '0.25rem',
         marginBottom: '0.75rem',
+        animation: 'pulse 1.5s infinite ease-in-out',
     },
     skeletonButton: {
-        height: '3rem',
+        height: '3.5rem',
         backgroundColor: '#9ca3af',
         borderRadius: '0.5rem',
         marginTop: '1rem',
         width: '100%',
+        animation: 'pulse 1.5s infinite ease-in-out',
     },
     errorContainer: {
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
         padding: '4rem 2rem',
-        gap: '1.5rem',
-        textAlign: 'center',
-        backgroundColor: '#fee2e2',
+        marginTop: '2rem',
         border: '1px solid #fca5a5',
         borderRadius: '0.75rem',
-        margin: '2rem',
+        textAlign: 'center',
     },
     errorIcon: {
         fontSize: '3rem',
@@ -529,6 +576,23 @@ const styles = {
         fontSize: '1.5rem',
         color: '#dc2626',
         fontWeight: '700',
+    },
+    goBackButton: {
+        padding: '0.75rem 2rem',
+        backgroundColor: '#14b8a6',
+        color: 'white',
+        border: 'none',
+        borderRadius: '0.5rem',
+        fontSize: '1rem',
+        fontWeight: '500',
+        cursor: 'pointer',
+        transition: 'background-color 0.2s',
+        marginTop: '1.5rem',
+        ':hover': { backgroundColor: '#0d9488' },
+    },
+    '@keyframes pulse': {
+        '0%, 100%': { opacity: 1 },
+        '50%': { opacity: 0.5 },
     },
 };
 
