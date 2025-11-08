@@ -12,6 +12,10 @@ const MapPinIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" heig
 const EditIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>;
 const SaveIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>;
 const XIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+// New: Icon for Upgrade
+const CrownIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7z"/><path d="M12 17v-3"/></svg>;
+// New: Icon for Post Vehicle
+const CarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9.5-.6.8-1.4.8-2.2v-2C21 3.9 19.4 2 17.5 2h-11C4.6 2 3 3.9 3 6v2.5c0 .9.3 1.7.8 2.2C3.7 12.3 3 13.1 3 14v3c0 .6.4 1 1 1h2"/><path d="M11 17h2"/><path d="M12 5v.01"/><path d="M12 12v.01"/></svg>;
 
 
 // --- JWT Decoding Utility ---
@@ -42,6 +46,7 @@ export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [updateStatus, setUpdateStatus] = useState({ message: '', type: '' }); // type: success/error
+  const [navigationTarget, setNavigationTarget] = useState(null); // State for conditional navigation
 
   // Profile API Endpoint structure
   const profileApiBaseUrl = 'https://api.b2a2cars.com/api/users/accounts/';
@@ -63,22 +68,31 @@ export default function Profile() {
         });
 
         const profileData = response.data;
-        setProfile(profileData);
+        
+        // **IMPORTANT UPDATE:** Ensure 'form_type' is included in the profile state
+        // Assuming the API returns form_type as one of the fields
+        // For demonstration, defaulting to 'customer' if the field is missing.
+        const assumedProfileData = {
+            ...profileData,
+            form_type: profileData.form_type || 'customer',
+        };
+
+        setProfile(assumedProfileData);
         
         // Initialize form data with fetched profile details
         setFormData({
-            first_name: profileData.first_name || '',
-            last_name: profileData.last_name || '',
-            email: profileData.email || '',
-            mobile: profileData.mobile || '',
-            country: profileData.country || '',
-            state: profileData.state || '',
-            address: profileData.address || '',
-            zip_code: profileData.zip_code || '',
-            dob: profileData.dob || '',
-            gender: profileData.gender || '',
-            language: profileData.language || '',
-            currency: profileData.currency || '',
+            first_name: assumedProfileData.first_name || '',
+            last_name: assumedProfileData.last_name || '',
+            email: assumedProfileData.email || '',
+            mobile: assumedProfileData.mobile || '',
+            country: assumedProfileData.country || '',
+            state: assumedProfileData.state || '',
+            address: assumedProfileData.address || '',
+            zip_code: assumedProfileData.zip_code || '',
+            dob: assumedProfileData.dob || '',
+            gender: assumedProfileData.gender || '',
+            language: assumedProfileData.language || '',
+            currency: assumedProfileData.currency || '',
         });
 
       } catch (err) {
@@ -154,6 +168,22 @@ export default function Profile() {
     setSelectedFile(e.target.files[0]);
   };
 
+  // New: Handler for dealer upgrade
+  const handleUpgradeToDealer = () => {
+    // In a real application, this would trigger an API call 
+    // to update the user's role and potentially a payment flow.
+    // For this demonstration, we'll simulate an update and navigate.
+    // Assuming the path to the dealer upgrade page is '/upgrade-dealer'.
+    setNavigationTarget('/upgrade-dealer');
+  };
+
+  // New: Handler for posting a vehicle
+  const handlePostVehicle = () => {
+    // Assuming the path to the PostVehicle page is '/post-vehicle'.
+    setNavigationTarget('/post-vehicle');
+  };
+
+
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -212,7 +242,10 @@ export default function Profile() {
         });
 
         // Update local state with the new profile data
-        setProfile(response.data);
+        setProfile({
+            ...response.data,
+            form_type: response.data.form_type || 'customer', // Preserve or update form_type
+        });
         // Also update form data to reflect latest successful save
         setFormData({
             first_name: response.data.first_name || '',
@@ -242,8 +275,12 @@ export default function Profile() {
     }
   };
 
+  // Conditional Navigation (per user request)
   if (isLoggedOut) {
     return <Navigate to="/login" />;
+  }
+  if (navigationTarget) {
+      return <Navigate to={navigationTarget} />;
   }
 
   if (loading) {
@@ -268,6 +305,7 @@ export default function Profile() {
 
   // Profile data displayed in view mode
   const profileItems = profile ? [
+    { label: 'Account Type', value: getField(profile.form_type, 'Customer').toUpperCase(), icon: <CrownIcon /> },
     { label: 'First Name', value: getField(profile.first_name), icon: <UserIcon /> },
     { label: 'Last Name', value: getField(profile.last_name), icon: <UserIcon /> },
     { label: 'Email', value: getField(profile.email), icon: <MailIcon /> },
@@ -403,6 +441,32 @@ export default function Profile() {
     </form>
   );
 
+  const ConditionalActionButtons = () => {
+    if (!profile) return null;
+
+    if (profile.form_type === 'dealer') {
+        return (
+            <button
+                onClick={handlePostVehicle}
+                className="action-btn dealer-btn"
+            >
+                <CarIcon /> Post Vehicle
+            </button>
+        );
+    } 
+    
+    // Default to 'customer' if form_type is missing or 'customer'
+    return (
+        <button
+            onClick={handleUpgradeToDealer}
+            className="action-btn upgrade-btn"
+        >
+            <CrownIcon /> Upgrade as Dealer
+        </button>
+    );
+  };
+
+
   return (
     <>
       <style>
@@ -419,6 +483,8 @@ export default function Profile() {
             --success-color: #10b981; /* Emerald 500 */
             --card-bg: #ffffff;
             --secondary-text: #6b7280;
+            --dealer-color: #10b981; /* Emerald Green */
+            --upgrade-color: #f59e0b; /* Amber Yellow */
           }
 
           body {
@@ -649,19 +715,28 @@ export default function Profile() {
             transform: translateY(-2px);
           }
 
-          /* --- Footer and Logout --- */
+          /* --- Footer, Logout and Action Buttons --- */
           .profile-footer {
             margin-top: 2rem;
             text-align: center;
             padding-top: 1.5rem;
             border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+          }
+          
+          .profile-footer-actions {
+            display: flex;
+            gap: 1rem;
           }
 
           .logout-btn {
             background-color: var(--error-color);
             color: white;
             border: none;
-            padding: 0.75rem 2rem;
+            padding: 0.75rem 1.5rem;
             border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
@@ -676,6 +751,42 @@ export default function Profile() {
           .logout-btn:active {
             transform: translateY(0);
           }
+          
+          .action-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s, transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.1);
+          }
+          
+          .upgrade-btn {
+            background-color: var(--upgrade-color);
+            color: white;
+            box-shadow: 0 4px 6px rgba(245, 158, 11, 0.3);
+          }
+          
+          .upgrade-btn:hover {
+            background-color: #d97706; /* Amber 700 */
+            transform: translateY(-2px);
+          }
+          
+          .dealer-btn {
+            background-color: var(--dealer-color);
+            color: white;
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+          }
+          
+          .dealer-btn:hover {
+            background-color: #059669; /* Emerald 700 */
+            transform: translateY(-2px);
+          }
+
 
           /* --- Error, Success & Loading --- */
           .error-message, .loading-card {
@@ -747,6 +858,21 @@ export default function Profile() {
             .form-actions {
                 flex-direction: column-reverse;
             }
+            .profile-footer {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .profile-footer-actions {
+                width: 100%;
+                flex-direction: column;
+            }
+            .action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .logout-btn {
+                width: 100%;
+            }
           }
         `}
       </style>
@@ -799,6 +925,9 @@ export default function Profile() {
               )}
 
               <div className="profile-footer">
+                <div className="profile-footer-actions">
+                    <ConditionalActionButtons />
+                </div>
                 <button
                     onClick={handleLogout}
                     className="logout-btn"

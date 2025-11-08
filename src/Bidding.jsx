@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 
 // --- Configuration and Utilities ---
-const BASE_API_URL = 'https://api.b2a2cars.com';
+const BASE_API_URL = 'http://127.0.0.1:8000';
 // Use the provided GET endpoint for fetching auction details
 const AUCTION_DETAIL_ENDPOINT = '/api/auction/auctions/'; // Used as base + {id}/
 // Use the provided POST endpoint for placing bids
