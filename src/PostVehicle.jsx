@@ -56,7 +56,7 @@ const PostVehicle = () => {
         new URLSearchParams(formData),
         {
           headers: {
-            'accept': 'application/json',
+            'accept': 'multipart/form-data',
             'Authorization': AUTH_TOKEN,
             'Content-Type': 'application/x-www-form-urlencoded',
             'X-CSRFTOKEN': CSRF_TOKEN
